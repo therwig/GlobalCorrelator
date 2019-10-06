@@ -10,7 +10,6 @@ Example using division LUT
 #include "ap_fixed.h"
 #include "src/met.h"
 
-
 int main() {
 
     // calculate met for NPART particles
@@ -22,7 +21,7 @@ int main() {
     //setup random
     std::default_random_engine generator(1776); // seed
     std::uniform_real_distribution<float> pt_dist(0.,100.);
-    std::uniform_real_distribution<float> phi_dist(-PI,PI);
+    std::uniform_real_distribution<float> phi_dist(-FLOATPI,FLOATPI);
 
     //fill test data
     std::vector<std::vector<std::pair<float,float> > > vals;
@@ -39,12 +38,15 @@ int main() {
         }
     }
 
+    float pt_hw;
+    float phi_hw;
     for (int i=0; i<NTEST; ++i) {
 
-        //initialize all to zero
         for(int j=0; j<NPART; j++){
-            in_pt_hw[j]  = vals[i][j].first;
-            in_phi_hw[j] = vals[i][j].second;
+            // convert float to hw
+            in_pt_hw[j]  = pow(2,PT_DEC)*vals[i][j].first;
+            in_phi_hw[j] = pow(2,PHI_SIZE)/(2*FLOATPI)*vals[i][j].second;
+            // keep test vals as float
             in_pt[j]  = vals[i][j].first;
             in_phi[j] = vals[i][j].second;
         }

@@ -2,85 +2,121 @@
 #define MET_H
 
 #include <iostream>
-
+#include <cmath>
 #include "ap_int.h"
 #include "ap_fixed.h"
 
-// size of the LUT
-#define N_TABLE_SIZE_NUM 1533 //Maximum number is 2045 for some reason (SIGSEGV otherwise)
-#define N_TABLE_SIZE_DEN 1533 //Maximum number is 2045 for some reason (SIGSEGV otherwise)
-
-typedef ap_int<16> pt_t;
-typedef ap_fixed<18,9> phi_t;
-
-typedef ap_fixed<18,9> sincos_t;
-typedef ap_fixed<18,9> sumxy_t;
-
-/* typedef ap_uint<11> val_t; */
-/* // Type used for LUT (ap_fixed<X,Y>) */
-/* #define AP_FIXED_SIZE 14 */
-/* #define AP_FIXED_DEC 11 */
-/* typedef ap_fixed<AP_FIXED_SIZE,AP_FIXED_DEC> result_t; */
-
+// For testing
 #define NTEST 4
 #define NPART 10
-#define PI 3.141593
+#define FLOATPI 3.141593
+
+// Input / Output types
+#define PT_SIZE 16
+#define PT_DEC 4
+#define PHI_SIZE 8
+typedef ap_int<PT_SIZE> pt_t;
+typedef ap_int<PHI_SIZE> phi_t;
+
+//MET alg types
+typedef ap_fixed<18,15> sincos_t; // TODO optimize ( vals in [-1,1] )
+typedef ap_int<PT_SIZE> sumxy_t; // TODO optimize ( vals in [-METMAX,METMAX] )
+#define ACOS_SIZE 8
+typedef ap_int<ACOS_SIZE> acos_t; // TODO optimize ( vals in [-1,1] )
 
 
 // reference and hardware functions
 void met_ref(float in_pt[NPART], float in_phi[NPART], float& out_pt, float& out_phi);
 void met_hw(pt_t data_pt[NPART], phi_t data_phi[NPART], pt_t& res_pt, phi_t& res_phi);
 
-// *************************************************
-//       Division
-// *************************************************
-template<class data_T, int N_TABLE_NUM, int N_TABLE_DEN>
-void init_division_table(data_T table_out[N_TABLE_NUM*N_TABLE_DEN]) {
-    // Implement division lookup
-    for (int inum = 0; inum < N_TABLE_NUM; inum++) {
-        for (int iden = 0; iden < N_TABLE_DEN; iden++) {
-            int index = (inum*N_TABLE_NUM)+iden;
-            // Compute lookup table function
-            data_T real_val = (iden>0) ? float(inum)/iden : 0;
-            table_out[index] = real_val;
-        }
+
+// Cosine init + lookup
+template<class res_T, int N_TABLE>
+void init_cos_table(res_T table_out[N_TABLE]) {
+    int mymax = std::min(PHI_SIZE,N_TABLE);
+    for (int ii = 0; ii < mymax; ii++) {
+        // Convert: table index ->  HW x-value -> real x-value
+        // (0,PHI_SIZE) -> (-PHI_SIZE/2, PHI_SIZE) -> (-pi,pi)
+        float in_val = (ii-PHI_SIZE/2) * (2*FLOATPI)/pow(2,PHI_SIZE);
+        sincos_t hw_val = cos(in_val);
+        table_out[ii] =  hw_val;
     }
-    return;
 }
+template<class data_T, class res_T, int N_TABLE>
+void Cos(data_T data, res_T &res) {
 
-
-template<class data_T, class res_T, int TABLE_SIZE_NUM, int TABLE_SIZE_DEN>
-void division(data_T &data_num, data_T &data_den, res_T &res) {
     // Initialize the lookup table
-    res_T division_table[TABLE_SIZE_NUM*TABLE_SIZE_DEN];
-    init_division_table<res_T, TABLE_SIZE_NUM, TABLE_SIZE_DEN>(division_table);
+    res_T cos_table[N_TABLE];
+    init_cos_table<res_T,N_TABLE>(cos_table);
 
     // Index into the lookup table based on data
-    int index_num, index_den, index;
-
-    //#pragma HLS PIPELINE
-
-    if (data_num < 0) data_num = 0;
-    if (data_den < 0) data_den = 0;
-    if (data_num > TABLE_SIZE_NUM-1) data_num = TABLE_SIZE_NUM-1;
-    if (data_den > TABLE_SIZE_DEN-1) data_den = TABLE_SIZE_DEN-1;
-    index = (data_num*TABLE_SIZE_NUM) + data_den;
-    res = division_table[index];
-
-    return;
+    // (phi runs from -PHI_SIZE/2 to PHI_SIZE/2-1)
+    int index = data+PHI_SIZE/2;
+    if (index < 0) index = 0;
+    if (index >= N_TABLE) index = N_TABLE-1;
+    res = cos_table[index];    
 }
-
-
-// Default table size provided here:
+// default tab size
 template<class data_T, class res_T>
-void division(data_T &data_num, data_T &data_den, res_T &res) { 
-    /* Get the division value from the LUT */
-    if(data_den==0) {
-        std::cout << "WARNING::division::data_den==0" << std::endl;
-        return;
-    }
-    division<data_T, res_T, N_TABLE_SIZE_NUM, N_TABLE_SIZE_DEN>(data_num, data_den, res); 
-    return;
+void Cos(data_T data, res_T &res) {
+    const int tab_size = pow(2,PHI_SIZE);
+    Cos<data_T, res_T, tab_size>(data,res);
 }
+
+/*
+// Sine init + lookup
+template<int N_TABLE>
+void init_sin_table(res_T table_out[N_TABLE]) {
+    for (int ii = 0; ii < PHI_SIZE; ii++) {
+        // Convert: table index ->  HW x-value -> real x-value
+        // (0,PHI_SIZE) -> (-PHI_SIZE/2, PHI_SIZE) -> (-pi,pi)
+        float in_val = (ii-PHI_SIZE/2) * (2*FLOATPI)/pow(2,PHI_SIZE);
+        sincos_t hw_val = sin(in_val);
+        table_out[ii] =  hw_val;
+    }
+}
+template<class data_T, class res_T, int N_TABLE>
+void Sin(T_in data, rT_co &res) {
+
+    // Initialize the lookup table
+    res_T sin_table[N_TABLE];
+    init_sin_table<N_TABLE>(sin_table);
+
+    // Index into the lookup table based on data
+    // (phi runs from -PHI_SIZE/2 to PHI_SIZE/2-1)
+    int index = data+PHI_SIZE/2;
+    if (index < 0) index = 0;
+    if (index >= N_TABLE) index = N_TABLE-1;
+    res = sin_table[index];    
+}
+*/
+
+/*
+// ArcCosine init + lookup
+template<int N_TABLE>
+void init_acos_table(res_T table_out[N_TABLE]) {
+    for (int ii = 0; ii < PHI_SIZE; ii++) {
+        // Convert: table index ->  HW x-value -> real x-value
+        // (0,PHI_SIZE) -> (-PHI_SIZE/2, PHI_SIZE) -> (-pi,pi)
+        float in_val = (ii-PHI_SIZE/2) * (2*FLOATPI)/pow(2,PHI_SIZE);
+        sincos_t hw_val = acos(in_val);
+        table_out[ii] =  hw_val;
+    }
+}
+template<class data_T, class res_T, int N_TABLE>
+void Acos(T_in data, rT_co &res) {
+
+    // Initialize the lookup table
+    res_T acos_table[N_TABLE];
+    init_acos_table<N_TABLE>(acos_table);
+
+    // Index into the lookup table based on data
+    // (phi runs from -PHI_SIZE/2 to PHI_SIZE/2-1)
+    int index = data+PHI_SIZE/2;
+    if (index < 0) index = 0;
+    if (index >= N_TABLE) index = N_TABLE-1;
+    res = acos_table[index];    
+}
+*/
 
 #endif
