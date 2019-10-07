@@ -7,8 +7,6 @@
 #include "ap_fixed.h"
 #include "hls_math.h"
 
-#include "division.h"
-
 // For testing
 #define NTEST 4
 #define NPART 10
@@ -47,6 +45,10 @@ typedef ap_int<PT_SIZE> sumxy_t; // TODO optimize ( vals in [-METMAX,METMAX] )
 #define SQRT_ACOS_TABLE_SIZE (1<<AS_SIZE)
 typedef ap_fixed<AS_SIZE+1,1> as_t;
 //+1 for +/- with as_size decimal
+
+// for ratio table
+#define RT_NUM (1<<AS_SIZE)
+#define RT_DEN (1<<AS_SIZE)
 
 // reference and hardware functions
 void met_ref(float in_pt[NPART], float in_phi[NPART], float& out_pt, float& out_phi);
@@ -105,6 +107,7 @@ template<class data_T, class res_T>
 void Sin(data_T data, res_T &res) {
 
     // Initialize the lookup table
+    static bool CosIsFilled = false;
     res_T sin_table[SIN_TABLE_SIZE];
     init_sin_table<res_T>(sin_table);
 
@@ -113,7 +116,7 @@ void Sin(data_T data, res_T &res) {
     ap_uint<PHI_SIZE> index = data + (1<<(PHI_SIZE-1));
     if (index < 0) index = 0;
     if (index >= SIN_TABLE_SIZE) index = SIN_TABLE_SIZE-1;
-    res = sin_table[index];    
+    res = sin_table[index];
 }
 
 
@@ -181,6 +184,59 @@ void SqrtACos(data_T data, res_T &res) {
     /* std::cout << index << " "; */
     /* std::cout << res << " "; */
     /* std::cout << std::endl; */
+}
+
+
+// Divide two numbers, each of which run from 0 to (1<<AS_SIZE)
+// The numerator is always less than the denominator, allowing us to save space :)
+//   I'll skip this implementation for now and just make the n*n table (not n(n+1)/2)
+template<class data_T>
+void init_division_table(data_T table_out[]) {
+    // Implement division lookup
+    for (int iden = 0; iden < RT_DEN; iden++) {
+        for (int inum = 0; inum < RT_NUM; inum++) {
+            int index = (inum*RT_NUM)+iden;
+            // Compute lookup table function
+            data_T real_val = (iden>0) ? float(inum)/iden : 0;
+            table_out[index] = real_val;
+        }
+    }
+    return;
+}
+template<class data_T, class res_T>
+void Divide(data_T data_num, data_T data_den, res_T &res) {
+
+#ifdef __HLS_SYN__
+    bool initialized = false;
+    res_T division_table[RT_NUM*RT_DEN];
+#else 
+    static bool initialized = false;
+    static res_T division_table[RT_NUM*RT_DEN];
+#endif
+    if (!initialized) {
+        init_division_table<res_T>(division_table);
+        initialized = true;
+    }
+
+
+    /* // Initialize the lookup table */
+    /* res_T division_table[RT_NUM*RT_DEN]; */
+    /* init_division_table<res_T>(division_table); */
+
+    // Index into the lookup table based on data
+    int index_num, index_den, index;
+    /* data_T data_num = _data_num; */
+    /* data_T data_den = _data_den; */
+
+    //#pragma HLS PIPELINE
+    if (data_num < 0) data_num = 0;
+    if (data_den < 0) data_den = 0;
+    if (data_num > RT_NUM-1) data_num = RT_NUM-1;
+    if (data_den > RT_DEN-1) data_den = RT_DEN-1;
+    index = (data_num*RT_NUM) + data_den;
+    res = division_table[index];
+
+    return;
 }
 
 

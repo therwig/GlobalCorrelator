@@ -40,7 +40,7 @@ void met_hw(pt_t data_pt[NPART], phi_t data_phi[NPART], pt2_t& res_pt2, phi_t& r
         return;
     }
     as_t divi; // (x/tot)**2
-    division(x2,res_pt2,divi); // bit shift num+den, reduce precision / table size
+    Divide(x2,res_pt2,divi); // bit shift num+den, reduce precision / table size
 
     // in Q1, phi in (0, pi/2) = (0,64)
     // in Q2, phi in (pi/2,pi) = (64,128)

@@ -3,8 +3,6 @@
 #include "ap_int.h"
 #include "ap_fixed.h"
 
-#include "src/division.h"
-
 void cos_test(){    
     // loop through phi values and print the results
     std::cout<<"Running cos_test" << std::endl;
@@ -78,13 +76,14 @@ void div_test(){
         for(int i=0; i<=j; i++){
             index_x = i;
             index_y = j;
-            ratio<pt2_t,pt2_t>(index_x,index_y,result);
+            Divide<pt2_t,as_t>(index_x,index_y,result);
 
             std::cout << "x=" << index_x << ", ";
             std::cout << "y=" << index_x << ", ";
             std::cout << "x/y=" << float(i)/j << ", ";
             std::cout << "result=" << result << " ";
             std::cout << std::endl;
+        }
     }
 }
 
