@@ -19,27 +19,38 @@
 #define PT_DEC 4
 #define PHI_SIZE 8
 typedef ap_int<PT_SIZE> pt_t;
+typedef ap_uint<2*PT_SIZE> pt2_t;
 typedef ap_int<PHI_SIZE> phi_t;
 
 //MET alg types
-#define SINCOS_SIZE 32
-#define SINCOS_DEC 16
-typedef ap_fixed<SINCOS_SIZE,SINCOS_DEC> sincos_t; // TODO optimize ( vals in [-1,1] )
+//#define SINCOS_SIZE 32
+//#define SINCOS_DEC 16
+#define SINCOS_SIZE 10
+#define SINCOS_DEC 8
+typedef ap_fixed<SINCOS_SIZE,SINCOS_SIZE-SINCOS_DEC> sincos_t; // TODO optimize ( vals in [-1,1] )
 typedef ap_int<PT_SIZE> sumxy_t; // TODO optimize ( vals in [-METMAX,METMAX] )
-#define ACOS_SIZE 8
-typedef ap_int<ACOS_SIZE> acos_t; // TODO optimize ( vals in [-1,1] )
+//typedef ap_int<ACOS_SIZE> acos_t; // TODO optimize ( vals in [-1,1] )
 
 // 2 * PHI_SIZE
-#define COS_TABLE_SIZE 256
-#define SIN_TABLE_SIZE 256
-#define SQRT_TABLE_SIZE 256
+// #define COS_TABLE_SIZE 256
+// #define SIN_TABLE_SIZE 256
+#define COS_TABLE_SIZE (1<<PHI_SIZE)
+#define SIN_TABLE_SIZE (1<<PHI_SIZE)
 
-#define ACOS_BITS 8
-#define ACOS_TABLE_SIZE 256
+// +/- the sin/cos decimals
+#define ACOS_SIZE (SINCOS_DEC+1)
+// #define ACOS_TABLE_SIZE 256
+#define ACOS_TABLE_SIZE (1<<ACOS_SIZE)
+
+// acos(sqrt(x))
+#define AS_SIZE (SINCOS_DEC+1)
+#define SQRT_ACOS_TABLE_SIZE (1<<AS_SIZE)
+typedef ap_fixed<AS_SIZE+1,1> as_t;
+//+1 for +/- with as_size decimal
 
 // reference and hardware functions
 void met_ref(float in_pt[NPART], float in_phi[NPART], float& out_pt, float& out_phi);
-void met_hw(pt_t data_pt[NPART], phi_t data_phi[NPART], pt_t& res_pt, phi_t& res_phi);
+void met_hw(pt_t data_pt[NPART], phi_t data_phi[NPART], pt2_t& res_pt2, phi_t& res_phi);
 
 
 // Cosine init + lookup
@@ -51,7 +62,7 @@ void init_cos_table(res_T table_out[COS_TABLE_SIZE]) {
         // (0,PHI_SIZE) -> (-PHI_SIZE/2, PHI_SIZE) -> (-pi,pi)
         float in_val = (ii-(1<<(PHI_SIZE-1)))
             * (2*FLOATPI)/pow(2,PHI_SIZE);
-        sincos_t hw_val = cos(in_val);
+        res_T hw_val = cos(in_val);
         table_out[ii] =  hw_val;
         //std::cout << " " << ii << " " << in_val << " " << hw_val << std::endl;
     }
@@ -86,7 +97,7 @@ void init_sin_table(res_T table_out[SIN_TABLE_SIZE]) {
         // (0,PHI_SIZE) -> (-PHI_SIZE/2, PHI_SIZE) -> (-pi,pi)
         float in_val = (ii-(1<<(PHI_SIZE-1)))
             * (2*FLOATPI)/pow(2,PHI_SIZE);
-        sincos_t hw_val = sin(in_val);
+        res_T hw_val = sin(in_val);
         table_out[ii] =  hw_val;
     }
 }
@@ -106,19 +117,16 @@ void Sin(data_T data, res_T &res) {
 }
 
 
-// ArcCosine init + lookup
+// arccos init + lookup
 template<class res_T>
 void init_acos_table(res_T table_out[ACOS_TABLE_SIZE]) {
     for (int ii = 0; ii < ACOS_TABLE_SIZE; ii++) {
         // Convert: table index ->  HW x-value -> real x-value
-        // acos : (-1,1) -> (0,pi)
-        // (0,ACOS_TABLE_SIZE) -> (-PHI_SIZE/2, PHI_SIZE) -> (-1,1)
-        // 
-
-        // (0,PHI_SIZE) -> (-PHI_SIZE/2, PHI_SIZE) -> 
-        float in_val = (ii-PHI_SIZE/2) * (2*FLOATPI)/pow(2,PHI_SIZE);
-        sincos_t hw_val = acos(in_val);
+        // (0,PHI_SIZE) -> (-PHI_SIZE/2, PHI_SIZE) -> (-pi,pi)
+        float in_val = float(ii)/(1<<(ACOS_SIZE-1))-1.;
+        res_T hw_val = (1<<(PHI_SIZE-1))/FLOATPI * acos(in_val);
         table_out[ii] =  hw_val;
+        // std::cout << " " << ii << " " << in_val << " " << acos(in_val) << " " << table_out[ii] << std::endl;
     }
 }
 template<class data_T, class res_T>
@@ -130,16 +138,86 @@ void Acos(data_T data, res_T &res) {
 
     // Index into the lookup table based on data
     // (phi runs from -PHI_SIZE/2 to PHI_SIZE/2-1)
-    int index = data+PHI_SIZE/2;
-
-    // data is sincos_t = fixed pt(SINCOS_SIZE,SINCOS_DEC)
-    // ACOS_BITS
-    // shift (-1,1) to (0,2^ACOS_BITS)
-    //ap_uint<ACOS_BITS> index = ap_uint<ACOS_BITS>(data+1) * ap_uint<ACOS_BITS>(1<<ACOS_BITS);
+    ap_uint<ACOS_SIZE> index = ap_uint<SINCOS_DEC+1>(data*(1<<SINCOS_DEC))-(1<<SINCOS_DEC);
     if (index < 0) index = 0;
     if (index >= ACOS_TABLE_SIZE) index = ACOS_TABLE_SIZE-1;
-    res = acos_table[index];    
+    res = acos_table[index];
+    /* std::cout << " -> "; */
+    /* std::cout << data << " "; */
+    /* std::cout << index << " "; */
+    /* std::cout << res << " "; */
+    /* std::cout << std::endl; */
 }
+
+
+// arccos(sqrt(x)) init + lookup
+template<class res_T>
+void init_sqrt_acos_table(res_T table_out[SQRT_ACOS_TABLE_SIZE]) {
+    for (int ii = 0; ii < SQRT_ACOS_TABLE_SIZE; ii++) {
+        float in_val = float(ii)/(1<<AS_SIZE);
+        float x = (1<<(PHI_SIZE-1))/FLOATPI * acos(sqrt(in_val));
+        res_T hw_val = x;
+        table_out[ii] =  hw_val;
+//        std::cout << " " << ii << " " << in_val << " " << 
+//            (1<<(PHI_SIZE-1))/FLOATPI * acos(sqrt(in_val)) << " " 
+//                  << table_out[ii] << std::endl;
+    }
+}
+template<class data_T, class res_T>
+void SqrtACos(data_T data, res_T &res) {
+
+    // Initialize the lookup table
+    res_T sqrt_acos_table[SQRT_ACOS_TABLE_SIZE];
+    init_sqrt_acos_table<res_T>(sqrt_acos_table);
+    //return;
+    // Index into the lookup table based on data
+    // (phi runs from -PHI_SIZE/2 to PHI_SIZE/2-1)
+    ap_uint<AS_SIZE> index = data*(1<<AS_SIZE);
+    if (index < 0) index = 0;
+    if (index >= SQRT_ACOS_TABLE_SIZE) index = SQRT_ACOS_TABLE_SIZE-1;
+    res = sqrt_acos_table[index];
+    /* std::cout << " -> "; */
+    /* std::cout << data << " "; */
+    /* std::cout << index << " "; */
+    /* std::cout << res << " "; */
+    /* std::cout << std::endl; */
+}
+
+
+/* // ArcCosine init + lookup */
+/* template<class res_T> */
+/* void init_acos_table(res_T table_out[ACOS_TABLE_SIZE]) { */
+/*     for (int ii = 0; ii < ACOS_TABLE_SIZE; ii++) { */
+/*         // Convert: table index ->  HW x-value -> real x-value */
+/*         // acos : (-1,1) -> (0,pi) */
+/*         // (0,ACOS_TABLE_SIZE) -> (-PHI_SIZE/2, PHI_SIZE) -> (-1,1) */
+/*         //  */
+
+/*         // (0,PHI_SIZE) -> (-PHI_SIZE/2, PHI_SIZE) ->  */
+/*         float in_val = (ii-PHI_SIZE/2) * (2*FLOATPI)/pow(2,PHI_SIZE); */
+/*         sincos_t hw_val = acos(in_val); */
+/*         table_out[ii] =  hw_val; */
+/*     } */
+/* } */
+/* template<class data_T, class res_T> */
+/* void Acos(data_T data, res_T &res) { */
+
+/*     // Initialize the lookup table */
+/*     res_T acos_table[ACOS_TABLE_SIZE]; */
+/*     init_acos_table<res_T>(acos_table); */
+
+/*     // Index into the lookup table based on data */
+/*     // (phi runs from -PHI_SIZE/2 to PHI_SIZE/2-1) */
+/*     int index = data+PHI_SIZE/2; */
+
+/*     // data is sincos_t = fixed pt(SINCOS_SIZE,SINCOS_DEC) */
+/*     // ACOS_BITS */
+/*     // shift (-1,1) to (0,2^ACOS_BITS) */
+/*     //ap_uint<ACOS_BITS> index = ap_uint<ACOS_BITS>(data+1) * ap_uint<ACOS_BITS>(1<<ACOS_BITS); */
+/*     if (index < 0) index = 0; */
+/*     if (index >= ACOS_TABLE_SIZE) index = ACOS_TABLE_SIZE-1; */
+/*     res = acos_table[index];     */
+/* } */
 
 /*
 // Sqrt init + lookup

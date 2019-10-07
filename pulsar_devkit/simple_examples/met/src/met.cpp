@@ -9,7 +9,7 @@ HLS implementation of TANH function via LUT
 #endif
 
 // pt, phi are integers
-void met_hw(pt_t data_pt[NPART], phi_t data_phi[NPART], pt_t& res_pt, phi_t& res_phi){
+void met_hw(pt_t data_pt[NPART], phi_t data_phi[NPART], pt2_t& res_pt2, phi_t& res_phi){
 
     // calc components first
     sincos_t si[NPART];
@@ -31,18 +31,23 @@ void met_hw(pt_t data_pt[NPART], phi_t data_phi[NPART], pt_t& res_pt, phi_t& res
     // pt_t tmp = met_x*met_x+met_y*met_y; // TODO use more bits?
     // SquareRoot<pt_t,pt_t>(tmp, res_pt);
     //res_pt = sqrt(met_x*met_x+met_y*met_y);
-    res_pt = hls::sqrt(met_x*met_x+met_y*met_y);
-    res_pt = 1;
+    res_pt2 = met_x*met_x+met_y*met_y;
+    pt2_t x2 = met_x*met_x;
     //
     // guard zero
-    if (res_pt == 0){
+    if (res_pt2 == 0){
         res_phi=0.;
         return;
     }
-    sincos_t divi; // x/tot
-    division(met_x,res_pt,divi); // can bit shift num and den to reduce precision / tab size
-    Acos<sincos_t,phi_t>(divi,res_phi);
-    // if(met_y<0) res_phi = - res_phi;
+    as_t divi; // (x/tot)**2
+    division(x2,res_pt2,divi); // bit shift num+den, reduce precision / table size
+
+    // in Q1, phi in (0, pi/2) = (0,64)
+    // in Q2, phi in (pi/2,pi) = (64,128)
+    // in Q3/Q4 phi negative
+    SqrtACos<as_t,phi_t>(divi,res_phi);
+    if(met_x<0) res_phi = (1<<(PHI_SIZE-1)) - res_phi;
+    if(met_y<0) res_phi = - res_phi;
     res_phi=0.;
 
     return;

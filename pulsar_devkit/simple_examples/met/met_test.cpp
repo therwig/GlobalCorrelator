@@ -14,7 +14,8 @@ Example using division LUT
 int alg_test() {
 
     // calculate met for NPART particles
-    pt_t in_pt_hw[NPART], out_pt_hw;
+    pt_t in_pt_hw[NPART];
+    pt2_t out_pt2_hw;
     phi_t in_phi_hw[NPART], out_phi_hw;
     float in_pt[NPART], in_phi[NPART];
     float out_pt, out_phi;
@@ -51,14 +52,15 @@ int alg_test() {
             in_pt[j]  = vals[i][j].first;
             in_phi[j] = vals[i][j].second;
         }
-        out_pt_hw=0.; out_phi_hw=0.;
+        out_pt2_hw=0.; out_phi_hw=0.;
         out_pt=0.; out_phi=0.;
         
         met_ref(in_pt, in_phi, out_pt, out_phi);
         std::cout << " REF : met(pt = " << out_pt << ", phi = "<< out_phi << ")\n";
 
-        met_hw(in_pt_hw, in_phi_hw, out_pt_hw, out_phi_hw);
-        std::cout << "  HW : met(pt = " << out_pt_hw << ", phi = "<< out_phi_hw << ")\n";
+        met_hw(in_pt_hw, in_phi_hw, out_pt2_hw, out_phi_hw);
+        std::cout << "  HW : met(pt = " << sqrt(float(out_pt2_hw))
+                  << ", phi = "<< out_phi_hw << ")\n";
 
     }
 
@@ -66,8 +68,11 @@ int alg_test() {
 }
 
 int main() {
-    cos_test();
-    return 0;
+    //cos_test();
+    div_test();
+    //acos_test();
+    //sqrt_acos_test();
+    return 1;
     alg_test();
     return 0;
 }
