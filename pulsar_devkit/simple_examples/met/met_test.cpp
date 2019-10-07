@@ -9,8 +9,9 @@ Example using division LUT
 #include "ap_int.h"
 #include "ap_fixed.h"
 #include "src/met.h"
+#include "lut_test.cpp"
 
-int main() {
+int alg_test() {
 
     // calculate met for NPART particles
     pt_t in_pt_hw[NPART], out_pt_hw;
@@ -61,5 +62,12 @@ int main() {
 
     }
 
+    return 0;
+}
+
+int main() {
+    cos_test();
+    return 0;
+    alg_test();
     return 0;
 }

@@ -29,18 +29,19 @@ void met_hw(pt_t data_pt[NPART], phi_t data_phi[NPART], pt_t& res_pt, phi_t& res
 
     // get sqrt
     // pt_t tmp = met_x*met_x+met_y*met_y; // TODO use more bits?
-    // square_root(tmp, res_pt);
+    // SquareRoot<pt_t,pt_t>(tmp, res_pt);
     //res_pt = sqrt(met_x*met_x+met_y*met_y);
-    res_pt = (met_x*met_x+met_y*met_y);
-
+    res_pt = hls::sqrt(met_x*met_x+met_y*met_y);
+    res_pt = 1;
+    //
     // guard zero
     if (res_pt == 0){
         res_phi=0.;
         return;
     }
     sincos_t divi; // x/tot
-    division(met_x,res_pt,divi);
-    // Acos<phi_t,sincos_t>(divi,res_phi);
+    division(met_x,res_pt,divi); // can bit shift num and den to reduce precision / tab size
+    Acos<sincos_t,phi_t>(divi,res_phi);
     // if(met_y<0) res_phi = - res_phi;
     res_phi=0.;
 
