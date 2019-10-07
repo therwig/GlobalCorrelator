@@ -16,8 +16,7 @@ void met_hw(pt_t data_pt[NPART], phi_t data_phi[NPART], pt_t& res_pt, phi_t& res
     sincos_t co[NPART];
     for(int i=0; i<NPART;i++){
         Cos<phi_t, sincos_t>(data_phi[i],co[i]);
-        //Cos<phi_t, sincos_t, int(pow(2,PHI_SIZE))>(data_phi[i],co[i]);
-        //Sin<phi_t,sincos_t>(data_phi[i],si[i]);
+        Sin<phi_t,sincos_t>(data_phi[i],si[i]);
     }
 
     // aggregate sums
