@@ -8,23 +8,24 @@
 #include "hls_math.h"
 
 // For testing
-#define NTEST 4
+#define NTEST 20
 #define NPART 10
 #define FLOATPI 3.141593
+#define DEBUG 0
 
 // Input / Output types
 #define PT_SIZE 16
-#define PT_DEC 4
 #define PHI_SIZE 8
 typedef ap_int<PT_SIZE> pt_t;
 typedef ap_uint<2*PT_SIZE> pt2_t;
+//typedef ap_uint<PT_SIZE> pt2_t;
 typedef ap_int<PHI_SIZE> phi_t;
 
 //MET alg types
 //#define SINCOS_SIZE 32
 //#define SINCOS_DEC 16
 #define SINCOS_SIZE 10
-#define SINCOS_DEC 8
+#define SINCOS_DEC (SINCOS_SIZE-2)
 typedef ap_fixed<SINCOS_SIZE,SINCOS_SIZE-SINCOS_DEC> sincos_t; // TODO optimize ( vals in [-1,1] )
 typedef ap_int<PT_SIZE> sumxy_t; // TODO optimize ( vals in [-METMAX,METMAX] )
 //typedef ap_int<ACOS_SIZE> acos_t; // TODO optimize ( vals in [-1,1] )
@@ -58,7 +59,6 @@ void met_hw(pt_t data_pt[NPART], phi_t data_phi[NPART], pt2_t& res_pt2, phi_t& r
 // Cosine init + lookup
 template<class res_T>
 void init_cos_table(res_T table_out[COS_TABLE_SIZE]) {
-    //static bool CosIsFilled = false;
     for (int ii = 0; ii < COS_TABLE_SIZE; ii++) {
         // Convert: table index ->  HW x-value -> real x-value
         // (0,PHI_SIZE) -> (-PHI_SIZE/2, PHI_SIZE) -> (-pi,pi)
@@ -68,14 +68,22 @@ void init_cos_table(res_T table_out[COS_TABLE_SIZE]) {
         table_out[ii] =  hw_val;
         //std::cout << " " << ii << " " << in_val << " " << hw_val << std::endl;
     }
-    //CosIsFilled = true;
 }
 template<class data_T, class res_T>
 void Cos(data_T data, res_T &res) {
 
     // Initialize the lookup table
+#ifdef __HLS_SYN__
+    bool initialized = false;
     res_T cos_table[COS_TABLE_SIZE];
-    init_cos_table<res_T>(cos_table);
+#else 
+    static bool initialized = false;
+    static res_T cos_table[COS_TABLE_SIZE];
+#endif
+    if (!initialized) {
+        init_cos_table<res_T>(cos_table);
+        initialized = true;
+    }
 
     // Index into the lookup table based on data
     // (phi runs from -PHI_SIZE/2 to PHI_SIZE/2-1)
@@ -107,9 +115,17 @@ template<class data_T, class res_T>
 void Sin(data_T data, res_T &res) {
 
     // Initialize the lookup table
-    static bool CosIsFilled = false;
+#ifdef __HLS_SYN__
+    bool initialized = false;
     res_T sin_table[SIN_TABLE_SIZE];
-    init_sin_table<res_T>(sin_table);
+#else 
+    static bool initialized = false;
+    static res_T sin_table[SIN_TABLE_SIZE];
+#endif
+    if (!initialized) {
+        init_sin_table<res_T>(sin_table);
+        initialized = true;
+    }
 
     // Index into the lookup table based on data
     // (phi runs from -PHI_SIZE/2 to PHI_SIZE/2-1)
@@ -136,8 +152,19 @@ template<class data_T, class res_T>
 void Acos(data_T data, res_T &res) {
 
     // Initialize the lookup table
+#ifdef __HLS_SYN__
+    bool initialized = false;
     res_T acos_table[ACOS_TABLE_SIZE];
-    init_acos_table<res_T>(acos_table);
+#else 
+    static bool initialized = false;
+    static res_T acos_table[ACOS_TABLE_SIZE];
+#endif
+    if (!initialized) {
+        init_acos_table<res_T>(acos_table);
+        initialized = true;
+    }
+    /* res_T acos_table[ACOS_TABLE_SIZE]; */
+    /* init_acos_table<res_T>(acos_table); */
 
     // Index into the lookup table based on data
     // (phi runs from -PHI_SIZE/2 to PHI_SIZE/2-1)
@@ -169,9 +196,21 @@ void init_sqrt_acos_table(res_T table_out[SQRT_ACOS_TABLE_SIZE]) {
 template<class data_T, class res_T>
 void SqrtACos(data_T data, res_T &res) {
 
-    // Initialize the lookup table
+#ifdef __HLS_SYN__
+    bool initialized = false;
     res_T sqrt_acos_table[SQRT_ACOS_TABLE_SIZE];
-    init_sqrt_acos_table<res_T>(sqrt_acos_table);
+#else 
+    static bool initialized = false;
+    static res_T sqrt_acos_table[SQRT_ACOS_TABLE_SIZE];
+#endif
+    if (!initialized) {
+        init_sqrt_acos_table<res_T>(sqrt_acos_table);
+        initialized = true;
+    }
+
+    // Initialize the lookup table
+    /* res_T sqrt_acos_table[SQRT_ACOS_TABLE_SIZE]; */
+    /* init_sqrt_acos_table<res_T>(sqrt_acos_table); */
     //return;
     // Index into the lookup table based on data
     // (phi runs from -PHI_SIZE/2 to PHI_SIZE/2-1)
@@ -217,7 +256,6 @@ void Divide(data_T data_num, data_T data_den, res_T &res) {
         init_division_table<res_T>(division_table);
         initialized = true;
     }
-
 
     /* // Initialize the lookup table */
     /* res_T division_table[RT_NUM*RT_DEN]; */
