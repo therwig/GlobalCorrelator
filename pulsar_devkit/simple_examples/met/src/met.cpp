@@ -10,13 +10,18 @@ HLS implementation of TANH function via LUT
 
 // pt, phi are integers
 void met_hw(pt_t data_pt[NPART], phi_t data_phi[NPART], pt2_t& res_pt2, phi_t& res_phi){
+    #pragma HLS ARRAY_PARTITION variable=data_pt complete
+    #pragma HLS ARRAY_PARTITION variable=data_phi complete
     
     if(DEBUG) std::cout << "  HW Begin" << std::endl;
 
     // calc components first
     sincos_t si[NPART];
     sincos_t co[NPART];
-    for(int i=0; i<NPART;i++){
+    #pragma HLS ARRAY_PARTITION variable=si complete
+    #pragma HLS ARRAY_PARTITION variable=co complete
+    LOOP_TRIG: for(int i=0; i<NPART;i++){
+        #pragma HLS unroll
         Cos<phi_t, sincos_t>(data_phi[i],co[i]);
         Sin<phi_t,sincos_t>(data_phi[i],si[i]);
     }
@@ -24,7 +29,8 @@ void met_hw(pt_t data_pt[NPART], phi_t data_phi[NPART], pt2_t& res_pt2, phi_t& r
     // aggregate sums
     sumxy_t met_x = 0;
     sumxy_t met_y = 0;
-    for(int i=0; i<NPART;i++){
+    LOOP_ACCUM: for(int i=0; i<NPART;i++){
+        #pragma HLS unroll
         met_x -= data_pt[i] * co[i];
         met_y -= data_pt[i] * si[i];
          if(DEBUG){
@@ -32,6 +38,7 @@ void met_hw(pt_t data_pt[NPART], phi_t data_phi[NPART], pt2_t& res_pt2, phi_t& r
              std::cout << "mety = " << met_y << " \n";
          }
     }
+
 
     // get sqrt
     // pt_t tmp = met_x*met_x+met_y*met_y; // TODO use more bits?
@@ -48,9 +55,13 @@ void met_hw(pt_t data_pt[NPART], phi_t data_phi[NPART], pt2_t& res_pt2, phi_t& r
 
     // cheating with the division for now...
     as_t divi; // (x/tot)**2
-    //Divide(x2,res_pt2,divi); // bit shift num+den, reduce precision / table size
-    divi = ap_fixed<2*PT_SIZE,PT_SIZE>(x2) / ap_fixed<2*PT_SIZE,PT_SIZE>(res_pt2);
+    Divide(x2,res_pt2,divi); // bit shift num+den, reduce precision / table size
+    //divi = ap_fixed<2*PT_SIZE,PT_SIZE>(x2) / ap_fixed<2*PT_SIZE,PT_SIZE>(res_pt2);
     //std::cout << " ---> " << x2 << "  " << res_pt2 << " " << divi << std::endl;
+
+    res_pt2=divi;
+    res_phi=met_y;
+    return;
 
     // in Q1, phi in (0, pi/2) = (0,64)
     // in Q2, phi in (pi/2,pi) = (64,128)
@@ -62,9 +73,9 @@ void met_hw(pt_t data_pt[NPART], phi_t data_phi[NPART], pt2_t& res_pt2, phi_t& r
     if(DEBUG){
         std::cout << "     x/tot = " << sqrt(float(x2)/float(res_pt2)) << " \t ";
         std::cout << "(x/tot)^2 = " << (float(x2)/float(res_pt2)) << "  ";
-        std::cout << "(hw = " << divi << ") \t ";
+        std::cout << "(hw = " << float(divi) << ") \t ";
         std::cout << "acos(x/tot) = " << acos(sqrt(float(x2)/float(res_pt2))) << "  ";
-        std::cout << "(hw = " << res_phi << ") \t ";
+        std::cout << "(hw = " << float(res_phi) << ") \t ";
     }
 
     // rotate
@@ -76,7 +87,7 @@ void met_hw(pt_t data_pt[NPART], phi_t data_phi[NPART], pt2_t& res_pt2, phi_t& r
         if(met_x<0) XYZ = FLOATPI-XYZ;
         if(met_y<0) XYZ = - XYZ;
         std::cout << "rotated = " << acos(sqrt(float(x2)/float(res_pt2))) << "  ";
-        std::cout << "(hw = " << res_phi << ") \n ";
+        std::cout << "(hw = " << float(res_phi) << ") \n ";
     }
 
     if(DEBUG){
@@ -84,8 +95,10 @@ void met_hw(pt_t data_pt[NPART], phi_t data_phi[NPART], pt2_t& res_pt2, phi_t& r
         std::cout << "met2 = " << float(res_pt2) << "  ";
         //std::cout << "(met2 hw = " << res_pt2 << ") \t ";
         std::cout << "phi = " << float(res_phi)*(2*FLOATPI)/(1<<PHI_SIZE) << "  ";
-        std::cout << "(phi hw = " << res_phi << ") \n";
+        std::cout << "(phi hw = " << float(res_phi) << ") \n";
     }
+
+
 
     return;
 }

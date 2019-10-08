@@ -42,6 +42,7 @@ typedef ap_int<PT_SIZE> sumxy_t; // TODO optimize ( vals in [-METMAX,METMAX] )
 #define ACOS_TABLE_SIZE (1<<ACOS_SIZE)
 
 // acos(sqrt(x))
+//#define AS_SIZE 4
 #define AS_SIZE (SINCOS_DEC+1)
 #define SQRT_ACOS_TABLE_SIZE (1<<AS_SIZE)
 typedef ap_fixed<AS_SIZE+1,1> as_t;
