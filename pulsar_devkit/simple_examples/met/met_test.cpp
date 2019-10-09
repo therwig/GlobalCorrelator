@@ -9,7 +9,8 @@ Example using division LUT
 #include "ap_int.h"
 #include "ap_fixed.h"
 #include "src/met.h"
-#include "lut_test.cpp"
+
+//#include "lut_test.cpp"
 
 int alg_test() {
 
