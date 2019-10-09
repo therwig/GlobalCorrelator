@@ -15,9 +15,10 @@
 
 // Input / Output types
 #define PT_SIZE 16
+#define PT2_SIZE 2*16
 #define PHI_SIZE 8
 typedef ap_int<PT_SIZE> pt_t;
-typedef ap_uint<2*PT_SIZE> pt2_t;
+typedef ap_uint<PT2_SIZE> pt2_t;
 //typedef ap_uint<PT_SIZE> pt2_t;
 typedef ap_int<PHI_SIZE> phi_t;
 
@@ -226,42 +227,40 @@ void SqrtACos(data_T data, res_T &res) {
     /* std::cout << std::endl; */
 }
 
+// division = multiplication and bit shift
+// if a, b uint<16>, then a in (0,2^16-1) and 1==2^16
+// then 1/b=2^16/b and a/b=a*(2^16/b)
+// can convert to decimal by shifting 16 bits
+// a/b = a*(2^16/b) >> 16
 
-// Divide two numbers, each of which run from 0 to (1<<AS_SIZE)
-// The numerator is always less than the denominator, allowing us to save space :)
-//   I'll skip this implementation for now and just make the n*n table (not n(n+1)/2)
-template<class data_T>
-void init_division_table(data_T table_out[]) {
+typedef DIVI_TAB_SIZE = 512
+void init_shiftPT2_invert_table(ap_uint<PT2_SIZE> table_out[]) {
     // Implement division lookup
-    for (int iden = 0; iden < RT_DEN; iden++) {
-        for (int inum = 0; inum < RT_NUM; inum++) {
-            int index = (inum*RT_NUM)+iden;
-            // Compute lookup table function
-            data_T real_val = (iden>0) ? float(inum)/iden : 0;
-            table_out[index] = real_val;
+    table_out[0] = (1<<PT2_SIZE)-1;
+    for (int i = 1; i < DIVI_TAB_SIZE; i++) {
+        // shift and divide
+        table_out[i] = (1<<PT2_SIZE)/i;
         }
     }
     return;
 }
-template<class data_T, class res_T>
-void Divide(data_T data_num, data_T data_den, res_T &res) {
+void Divide_PT2_asT(ap_uint<PT2_SIZE> data_num, ap_uint<PT2_SIZE> data_den, as_T &res) {
 
 #ifdef __HLS_SYN__
     bool initialized = false;
-    res_T division_table[RT_NUM*RT_DEN];
+    ap_uint<PT2_SIZE> inv_table[DIVI_TAB_SIZE];
 #else 
     static bool initialized = false;
-    static res_T division_table[RT_NUM*RT_DEN];
+    static ap_uint<PT2_SIZE> inv_table[DIVI_TAB_SIZE];
 #endif
     if (!initialized) {
-        init_division_table<res_T>(division_table);
+        init_shiftPT2_invert_table<res_T>(division_table);
         initialized = true;
     }
 
-    /* // Initialize the lookup table */
-    /* res_T division_table[RT_NUM*RT_DEN]; */
-    /* init_division_table<res_T>(division_table); */
-
+    // what precision to use here?
+    //ap_uint<PT2_SIZE> num_x_denInverse = data_num * inv_table[]
+    
     // Index into the lookup table based on data
     int index_num, index_den, index;
     /* data_T data_num = _data_num; */
@@ -277,6 +276,60 @@ void Divide(data_T data_num, data_T data_den, res_T &res) {
 
     return;
 }
+
+
+
+/* // Divide two numbers, each of which run from 0 to (1<<AS_SIZE) */
+/* // The numerator is always less than the denominator, allowing us to save space :) */
+/* //   I'll skip this implementation for now and just make the n*n table (not n(n+1)/2) */
+/* template<class data_T> */
+/* void init_division_table(data_T table_out[]) { */
+/*     // Implement division lookup */
+/*     for (int iden = 0; iden < RT_DEN; iden++) { */
+/*         for (int inum = 0; inum < RT_NUM; inum++) { */
+/*             int index = (inum*RT_NUM)+iden; */
+/*             // Compute lookup table function */
+/*             data_T real_val = (iden>0) ? float(inum)/iden : 0; */
+/*             table_out[index] = real_val; */
+/*         } */
+/*     } */
+/*     return; */
+/* } */
+/* template<class data_T, class res_T> */
+/* void Divide(data_T data_num, data_T data_den, res_T &res) { */
+
+/* #ifdef __HLS_SYN__ */
+/*     bool initialized = false; */
+/*     res_T division_table[RT_NUM*RT_DEN]; */
+/* #else  */
+/*     static bool initialized = false; */
+/*     static res_T division_table[RT_NUM*RT_DEN]; */
+/* #endif */
+/*     if (!initialized) { */
+/*         init_division_table<res_T>(division_table); */
+/*         initialized = true; */
+/*     } */
+
+/*     /\* // Initialize the lookup table *\/ */
+/*     /\* res_T division_table[RT_NUM*RT_DEN]; *\/ */
+/*     /\* init_division_table<res_T>(division_table); *\/ */
+
+/*     // Index into the lookup table based on data */
+/*     int index_num, index_den, index; */
+/*     /\* data_T data_num = _data_num; *\/ */
+/*     /\* data_T data_den = _data_den; *\/ */
+
+/*     //#pragma HLS PIPELINE */
+/*     if (data_num < 0) data_num = 0; */
+/*     if (data_den < 0) data_den = 0; */
+/*     if (data_num > RT_NUM-1) data_num = RT_NUM-1; */
+/*     if (data_den > RT_DEN-1) data_den = RT_DEN-1; */
+/*     index = (data_num*RT_NUM) + data_den; */
+/*     res = division_table[index]; */
+
+/*     return; */
+/* } */
+
 
 
 /* // ArcCosine init + lookup */

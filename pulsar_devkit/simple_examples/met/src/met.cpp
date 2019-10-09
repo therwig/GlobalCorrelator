@@ -1,5 +1,5 @@
 /*
-HLS implementation of TANH function via LUT
+HLS implementation of MET calculation from PF objects
 */
 #include "met.h"
 #include <cmath>
