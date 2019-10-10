@@ -1,5 +1,5 @@
 /*
-Example using division LUT
+MET calculation from PF objects
 */
 #include <vector>
 #include <cstdio>
@@ -41,6 +41,10 @@ int alg_test() {
         }
     }
 
+    //write results to file
+    FILE *f;
+    f=fopen("results.txt","w");
+
     for (int i=0; i<NTEST; ++i) {
         if(DEBUG) std::cout << "\n\n\n\nEvent " << i << std::endl;
         for(int j=0; j<NPART; j++){
@@ -64,16 +68,17 @@ int alg_test() {
         if(DEBUG) std::cout << " REF : met(pt = " << out_pt << ", phi = "<< out_phi << ")\n";
 
         met_hw(in_pt_hw, in_phi_hw, out_pt2_hw, out_phi_hw);
-        float phi_rad = float(out_phi_hw) * (2*FLOATPI)/(1<<PHI_SIZE);
-        float pt = sqrt(float(out_pt2_hw));
-        if(DEBUG) std::cout << "  HW : met(pt = " << pt << ", phi = "<< phi_rad << ")\n";
+        float out_phi_hw_rad = float(out_phi_hw) * (2*FLOATPI)/(1<<PHI_SIZE);
+        float out_pt_hw = sqrt(float(out_pt2_hw));
+        if(DEBUG) std::cout << "  HW : met(pt = " << out_pt_hw << ", phi = "<< out_phi_hw_rad << ")\n";
 
         //print compact (in nice units)
         if(!DEBUG) std::cout << "Event " << i
-                             << " (REF vs HW) met " << out_pt << " vs " << pt 
-                             << ", phi "<< out_phi << " vs "<< phi_rad << "\n";
-
+                             << " (REF vs HW) met " << out_pt << " vs " << out_pt_hw
+                             << ", phi "<< out_phi << " vs "<< out_phi_hw_rad << "\n";
+        fprintf(f, "%f %f %f %f \n", out_pt, out_phi, out_pt_hw, out_phi_hw_rad);
     }
+    fclose(f);
 
     return 0;
 }
