@@ -7,8 +7,8 @@
 #include "ap_fixed.h"
 
 // For testing
-#define NTEST 20
-#define NPART 20
+#define NTEST 10000
+#define NPART 150
 #define FLOATPI 3.141593
 #define DEBUG 0
 
@@ -19,14 +19,16 @@
 // pT is uint where 1=1GeV, up to 1024=2^10
 //   px, py need to be signed
 //   pT^2 needs double precision
-#define PT_SIZE 10
+// TDR: 16 bits, 1/4 GeV. For us, 12 bits probably OK (1024 GeV)
+#define PT_SIZE 12
 typedef ap_uint<PT_SIZE> pt_t;
 typedef ap_int<PT_SIZE+1> pxy_t;
 #define PT2_SIZE 2*PT_SIZE
 typedef ap_uint<PT2_SIZE> pt2_t;
+#define PT_DEC_BITS 2
 
-// phi size can be optimzed. For ref, 2pi/(2^8)=0.025
-#define PHI_SIZE 8
+// phi size = 10bits in TDR. For ref, 2pi/(2^10)=0.0006
+#define PHI_SIZE 10
 typedef ap_int<PHI_SIZE> phi_t;
 
 

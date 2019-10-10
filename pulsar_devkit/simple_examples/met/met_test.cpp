@@ -49,7 +49,7 @@ int alg_test() {
         if(DEBUG) std::cout << "\n\n\n\nEvent " << i << std::endl;
         for(int j=0; j<NPART; j++){
             // convert float to hw
-            in_pt_hw[j]  = vals[i][j].first;
+            in_pt_hw[j]  = vals[i][j].first * (1<<PT_DEC_BITS); // 0.25 GeV precision
             in_phi_hw[j] = pow(2,PHI_SIZE)/(2*FLOATPI)*vals[i][j].second;
             // keep test vals as float
             in_pt[j]  = vals[i][j].first;
@@ -69,7 +69,7 @@ int alg_test() {
 
         met_hw(in_pt_hw, in_phi_hw, out_pt2_hw, out_phi_hw);
         float out_phi_hw_rad = float(out_phi_hw) * (2*FLOATPI)/(1<<PHI_SIZE);
-        float out_pt_hw = sqrt(float(out_pt2_hw));
+        float out_pt_hw = sqrt(float(out_pt2_hw)) / (1<<PT_DEC_BITS); // 0.25GeV to GeV
         if(DEBUG) std::cout << "  HW : met(pt = " << out_pt_hw << ", phi = "<< out_phi_hw_rad << ")\n";
 
         //print compact (in nice units)

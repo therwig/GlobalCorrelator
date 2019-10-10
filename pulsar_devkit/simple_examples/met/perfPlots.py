@@ -69,9 +69,6 @@ draw(t,"hwphi-refphi:refphi","2d_metphi_diff")
 draw(t,"hw-ref:ref"         ,"p_met_diff")
 draw(t,"hw/ref:ref"         ,"p_met_rel")
 draw(t,"hwphi-refphi:refphi","p_metphi_diff")
-# draw(t,"ref:hw-ref"         ,"p_met_diff")
-# draw(t,"ref:hw/ref"         ,"p_met_rel")
-# draw(t,"refphi:hwphi-refphi","p_metphi_diff")
 
 
 
