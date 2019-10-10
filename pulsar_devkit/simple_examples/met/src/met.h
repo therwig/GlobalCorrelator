@@ -8,7 +8,7 @@
 
 // For testing
 #define NTEST 20
-#define NPART 10
+#define NPART 20
 #define FLOATPI 3.141593
 #define DEBUG 0
 
@@ -32,8 +32,6 @@ typedef ap_int<PHI_SIZE> phi_t;
 
 void met_ref(float in_pt[NPART], float in_phi[NPART], float& out_pt, float& out_phi);
 void met_hw(pt_t data_pt[NPART], phi_t data_phi[NPART], pt2_t& res_pt2, phi_t& res_phi);
-
-
 
 
 
@@ -83,7 +81,6 @@ void ProjX(pt_T pt, phi_T phi, pxy_T &x){
     if(phi<0 && phi>=-(1<<(PHI_SIZE-2))) phiQ1 = (1<<(PHI_SIZE-2)) -1 - phiQ1; // map -64-1 (0-63) to 63-0
 
     // get x component and flip sign if necessary
-    //x = pt * cos_table[phiQ1];
     x = (pt * cos_table[phiQ1]) >> PT_SIZE;
     if( phi>=(1<<(PHI_SIZE-2))
         || phi<-(1<<(PHI_SIZE-2)))
@@ -171,7 +168,7 @@ void ProjY(pt_T pt, phi_T phi, pxy_T &y){
 
 
 //
-// This is not the best way, I think, since numbers 513-1023 all map to 1 !
+// This is not the most efficient way, I think, since numbers 513-1023 all map to 1 !
 //   TODO - come back to this
 //
 #define INV_TAB_SIZE (1<<(PT_SIZE))
@@ -186,6 +183,8 @@ void init_inv_table(pt_T table_out[INV_TAB_SIZE]) {
     return;
 }
 
+// sets number of values in atan lookup table.
+//   covers 0,pi/4, so naturally use 2^(PHI_SIZE)/8
 #define ATAN_SIZE (PHI_SIZE-3)
 #define ATAN_TAB_SIZE (1<<ATAN_SIZE)
 // Get arctan of a number in (0,1), represented as integers 0 to 2^(pt_size)=1024
@@ -215,11 +214,11 @@ void PhiFromXY(pxy_T px, pxy_T py, phi_T &phi){
 #ifdef __HLS_SYN__
     bool initialized = false;
     pt_t inv_table[INV_TAB_SIZE];
-    pt_t atan_table[INV_TAB_SIZE];
+    pt_t atan_table[ATAN_TAB_SIZE];
 #else 
     static bool initialized = false;
     static pt_t inv_table[INV_TAB_SIZE];
-    static pt_t atan_table[INV_TAB_SIZE];
+    static pt_t atan_table[ATAN_TAB_SIZE];
 #endif
     if (!initialized) {
         init_inv_table(inv_table);
@@ -258,6 +257,8 @@ void PhiFromXY(pxy_T px, pxy_T py, phi_T &phi){
     // TODO - CHECK rotate phi back
     // TODO - CHECK px==0, py==0 cases
 
+    return;
+
     if(0){
         std::cout << " ---> ";
         std::cout << a << "  ";
@@ -274,8 +275,6 @@ void PhiFromXY(pxy_T px, pxy_T py, phi_T &phi){
         std::cout << atan(float(a)/float(b))*(1<<(PHI_SIZE-3))/(FLOATPI/4) << "  ";
         std::cout << std::endl;
     }
-
-    return;
 }
 
 
