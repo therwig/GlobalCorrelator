@@ -8,7 +8,7 @@
 
 // For testing
 #define NTEST 10000
-#define NPART 150
+#define NPART 10
 #define FLOATPI 3.141593
 #define DEBUG 0
 
@@ -19,7 +19,7 @@
 // pT is uint where 1=1GeV, up to 1024=2^10
 //   px, py need to be signed
 //   pT^2 needs double precision
-// TDR: 16 bits, 1/4 GeV. For us, 12 bits probably OK (1024 GeV)
+// TDR: 16 bits, 1/4 GeV. For us, 12 bits probably OK (1024 GeV) but would need to add overflow checks
 #define PT_SIZE 12
 typedef ap_uint<PT_SIZE> pt_t;
 typedef ap_int<PT_SIZE+1> pxy_t;
@@ -50,21 +50,27 @@ void init_projx_table(pt_T table_out[PROJ_TAB_SIZE]) {
     // Return table of cos(phi) where phi is in (0,pi/2)
     // multiply result by 1=2^(PT-SIZE)
     for (int i = 0; i < PROJ_TAB_SIZE; i++) {
+        //guard overflow near costheta=1
+        pt2_t x = round((1<<PT_SIZE) * cos(float(i)/PROJ_TAB_SIZE * FLOATPI/2));
+        if(x >= (1<<PT_SIZE)) table_out[i] = (1<<PT_SIZE)-1;
+        else table_out[i] = x;
+        //table_out[i] = std::round((1<<PT_SIZE) * cos(float(i)/PROJ_TAB_SIZE * FLOATPI/2));
+        
         if(0){
             std::cout << " ---> " << i << "  ";// << table_out[i] << std::endl;
             std::cout << (1<<PT_SIZE) << "  ";
             std::cout << (float(i)/PROJ_TAB_SIZE * FLOATPI/2) << "  ";
             std::cout << cos(float(i)/PROJ_TAB_SIZE * FLOATPI/2) << "  ";
             std::cout << (1<<PT_SIZE) * cos(float(i)/PROJ_TAB_SIZE * FLOATPI/2) << "  ";
+            std::cout << table_out[i] << "  ";
             std::cout << std::endl;
         }
-        table_out[i] = (1<<PT_SIZE) * cos(float(i)/PROJ_TAB_SIZE * FLOATPI/2);
     }
     return;
 }
 
 template<class pt_T, class phi_T,class pxy_T>
-void ProjX(pt_T pt, phi_T phi, pxy_T &x){
+    void ProjX(pt_T pt, phi_T phi, pxy_T &x, bool debug=false){
     // Initialize the lookup tables
 #ifdef __HLS_SYN__
     bool initialized = false;
@@ -84,6 +90,7 @@ void ProjX(pt_T pt, phi_T phi, pxy_T &x){
 
     // get x component and flip sign if necessary
     x = (pt * cos_table[phiQ1]) >> PT_SIZE;
+    if(debug) std::cout << pt << "  cos_table[" << phiQ1 << "] = " << cos_table[phiQ1] << "  " << x << std::endl;
     if( phi>=(1<<(PHI_SIZE-2))
         || phi<-(1<<(PHI_SIZE-2)))
         x = -x;
@@ -134,13 +141,16 @@ void init_projy_table(pt_T table_out[PROJ_TAB_SIZE]) {
     // Return table of sin(phi) where phi is in (0,pi/2)
     // multiply result by 1=2^(PT-SIZE)
     for (int i = 0; i < PROJ_TAB_SIZE; i++) {
-        table_out[i] = (1<<PT_SIZE) * sin(float(i)/PROJ_TAB_SIZE * FLOATPI/2);
+        // guard overflow
+        pt2_t x = round((1<<PT_SIZE) * sin(float(i)/PROJ_TAB_SIZE * FLOATPI/2));
+        if(x >= (1<<PT_SIZE)) table_out[i] = (1<<PT_SIZE)-1;
+        else table_out[i] = x;
     }
     return;
 }
 
 template<class pt_T, class phi_T,class pxy_T>
-void ProjY(pt_T pt, phi_T phi, pxy_T &y){
+    void ProjY(pt_T pt, phi_T phi, pxy_T &y, bool debug=false){
     // Initialize the lookup tables
 #ifdef __HLS_SYN__
     bool initialized = false;
@@ -160,6 +170,7 @@ void ProjY(pt_T pt, phi_T phi, pxy_T &y){
 
     // get y component and flip sign if necessary
     y = (pt * sin_table[phiQ1]) >> PT_SIZE;
+    if(debug) std::cout << pt << "  sin_table[" << phiQ1 << "] = " << sin_table[phiQ1] << "  " << y << std::endl;
     if( phi<0 ) y = -y;
 
     return;
@@ -180,7 +191,8 @@ void init_inv_table(pt_T table_out[INV_TAB_SIZE]) {
     // multiply result by 1=2^(PT-SIZE)
     table_out[0]=(1<<PT_SIZE)-1;
     for (int i = 1; i < INV_TAB_SIZE; i++) {
-        table_out[i] = (1<<PT_SIZE) / float(i);
+        //#pragma HLS unroll factor=1
+        table_out[i] = round((1<<PT_SIZE) / float(i));
     }
     return;
 }
@@ -194,9 +206,10 @@ void init_inv_table(pt_T table_out[INV_TAB_SIZE]) {
 template<class phi_T>
 void init_atan_table(phi_T table_out[ATAN_TAB_SIZE]) {
     // multiply result by 1=2^(PT-SIZE)
-    table_out[0]=0;
+    table_out[0]=int(0);
     for (int i = 1; i < ATAN_TAB_SIZE; i++) {
-        table_out[i] = atan(float(i)/ATAN_TAB_SIZE) * (1<<(PHI_SIZE-3)) / (FLOATPI/4);
+        table_out[i] = int(round(atan(float(i)/ATAN_TAB_SIZE) * (1<<(PHI_SIZE-3)) / (FLOATPI/4)));
+        //std::cout << atan(float(i)/ATAN_TAB_SIZE) * (1<<(PHI_SIZE-3)) / (FLOATPI/4) << std::endl;
         if(0){
             std::cout << " -> ";
             std::cout << i << "  ";
@@ -210,13 +223,16 @@ void init_atan_table(phi_T table_out[ATAN_TAB_SIZE]) {
     return;
 }
 
-template<class pxy_T, class phi_T>
-void PhiFromXY(pxy_T px, pxy_T py, phi_T &phi){
+template<class pxy_T, class phi_T, class pt_T>
+    void PhiFromXY(pxy_T px, pxy_T py, phi_T &phi, pt_T &ratio){
+
     // Initialize the lookup tables
 #ifdef __HLS_SYN__
     bool initialized = false;
     pt_t inv_table[INV_TAB_SIZE];
     pt_t atan_table[ATAN_TAB_SIZE];
+    //#pragma HLS ARRAY_PARTITION variable=inv_table complete
+    //#pragma HLS RESOURCE variable=inv_table core=ROM_1P
 #else 
     static bool initialized = false;
     static pt_t inv_table[INV_TAB_SIZE];
@@ -243,11 +259,16 @@ void PhiFromXY(pxy_T px, pxy_T py, phi_T &phi){
     pt_t b = y; //x<y ? y : x;
     if(a>b){ a = y; b = x; }
 
-    // get a/b <= 1
-    pt_t inv_b = inv_table[b];
-    pt_t a_over_b = a * inv_b; // x 2^(PT_BITS)
-    ap_uint<ATAN_SIZE> atan_index = a_over_b >> (PT_SIZE-ATAN_SIZE); // keep only most significant bits
-    phi = atan_table[atan_index];
+    /* if(1){ */
+    /*     //a,b up to  */
+    /* } else { */
+        // get a/b <= 1
+        pt_t inv_b = inv_table[b];
+        pt_t a_over_b = a * inv_b; // x 2^(PT_BITS)
+        ap_uint<ATAN_SIZE> atan_index = a_over_b >> (PT_SIZE-ATAN_SIZE); // keep only most significant bits
+        phi = atan_table[atan_index];
+    /* } */
+    //return;
 
     // rotate from (0,pi/4) to full quad1
     if(y>x) phi = (1<<(PHI_SIZE-2)) - phi; //phi = pi/2 - phi
@@ -258,6 +279,8 @@ void PhiFromXY(pxy_T px, pxy_T py, phi_T &phi){
 
     // TODO - CHECK rotate phi back
     // TODO - CHECK px==0, py==0 cases
+
+    ratio=a_over_b;
 
     return;
 
