@@ -1,78 +1,87 @@
-
 import ROOT
 from collections import OrderedDict
 pi=ROOT.TMath.Pi() #3.141593
-
+COLZ=[1,2,3,4,6]
 # helpers 
-def book(h,name,n,a,b,title=""):
-    h[name]=ROOT.TH1F(name,title,n,a,b)
-def book2(h,name,nx,ax,bx,ny,ay,by,title=""):
-    h[name]=ROOT.TH2F(name,title,nx,ax,bx,ny,ay,by)
-def bookp(h,name,nx,ax,bx,ay,by,title="",err="s"):
-    h[name]=ROOT.TProfile(name,title,nx,ax,bx,ay,by,err)
-def draw(t,var,hname):
-    t.Draw(var+">>"+hname)
 
-# tree
-t = ROOT.TTree("t","")
-t.ReadFile("results.txt","ref:refphi:hw:hwphi")
+nparts = [1,10,50,100,150]
+files = { n: ROOT.TFile("output/hists_n{}_10k.root".format(n),"read") for n in nparts}
 
-#hists
-h=OrderedDict()
+opts = { #OrderedDict()
+    "met_ref": {"norm": 1, "logy":0, "ymax":0.4, "rms":0, },
+    "met_diff_zoom": {"norm": 1, "logy":1, "rms":1, },
+    "met_rel_zoom": {"norm": 1, "logy":1, "rms":1, },
+    "metphi_diff_zoom": {"norm": 1, "logy":1, "rms":1, },
+}
 
-# basic
-book(h,"met_ref",40,0,1000,";[GeV]")
-book(h,"met_hw" ,40,0,1000,";[GeV]")
-book(h,"met_ref_fine",1024,0,1024,";[GeV]")
-book(h,"met_hw_fine" ,1024,0,1024,";[GeV]")
-book(h,"metphi_ref",40,-pi,pi)
-book(h,"metphi_hw" ,40,-pi,pi)
-book(h,"metphi_ref_fine",540,-pi/256*270,pi/256*270) # keep bin sizes
-book(h,"metphi_hw_fine" ,540,-pi/256*270,pi/256*270)
+for hname in opts:
+    # get hists and process if needed
+    hists = {n: files[n].Get(hname) for n in nparts}
+    if opts[hname]["norm"]:
+        for h in hists.values():
+            if h.Integral(): h.Scale(1./h.Integral())
 
-#differences
-book(h,"met_diff",80,-200,200,";MET(HW)-MET(ref) [GeV]")
-book(h,"met_rel",80,0,2,";MET(HW)/MET(ref)")
-book(h,"metphi_diff",80,-1,1,";phi(HW)-phi(ref)")
-# versus vals
-book2(h,"2d_met_diff",10,0,1000,40,-200,200,";MET(ref) [GeV];MET(HW)-MET(ref) [GeV]")
-book2(h,"2d_met_rel",10,0,1000,40,0,2,";MET(ref) [GeV];MET(HW)/MET(ref)")
-book2(h,"2d_metphi_diff",12,-pi/5*6,pi/5*6, 40,-1,1,";phi(ref) ;phi(HW)-phi(ref)")
-bookp(h,"p_met_diff",10,0,1000,-200,200,";MET(ref) [GeV];MET(HW)-MET(ref) [GeV]")
-bookp(h,"p_met_rel",10,0,1000,0,2,";MET(ref) [GeV];MET(HW)/MET(ref)")
-bookp(h,"p_metphi_diff",12,-pi/5*6,pi/5*6,-1,1,";phi(ref) ;phi(HW)-phi(ref)")
+    #configure the canvas, pad
+    ROOT.gStyle.SetOptStat(0)
+    c = ROOT.TCanvas("canv","",750,750)
+    pad = ROOT.TPad("pad", "pad", .005, .01, .995, .995)
+    pad.Draw()
+    pad.cd()
 
+    ROOT.gPad.SetLeftMargin(0.17)
+    ROOT.gPad.SetRightMargin(0.05)
+    ROOT.gPad.SetBottomMargin(0.1)
+    ROOT.gPad.SetTopMargin(0.05)
+    if opts[hname]["logy"]:
+        pad.SetLogy()
 
+    b = hists[1].Clone("tmp")
+    b.Reset()
+    b.Draw()
+    if "ymax" in opts[hname]:
+        b.SetMaximum( opts[hname]["ymax"] )
+    
+    b.GetXaxis().SetTitleOffset(1.2)
+    b.GetYaxis().SetTitleOffset(1.5)
+    b.GetYaxis().SetLabelSize(0.04)
+    b.GetYaxis().SetTitleSize(0.04)
+    b.Draw("")
 
+    for ih,n in enumerate(nparts):
+        h = hists[n]
+        col = COLZ[ih]
+        h.SetLineWidth(2)
+        h.SetMarkerStyle(20)
+        h.SetLineColor(col)
+        h.SetMarkerColor(col)        
+        h.Draw("hist same")
+        # h.Draw("same plc pmc")
 
-# reference met, phi
-draw(t,"ref","met_ref")
-draw(t,"ref","met_ref_fine")
-draw(t,"refphi","metphi_ref")
-draw(t,"refphi","metphi_ref_fine")
+    
+    ll = ROOT.TLatex()
+    ll.SetNDC()
+    ll.SetTextFont(72)
+    ll.DrawLatex(.20,.89,"#scale[0.9]{CMS}")
+    ll.SetTextFont(42)
+    ll.DrawLatex(.30,.89,"#scale[0.9]{Internal}")
 
-# hardware met, phi
-draw(t,"hw","met_hw")
-draw(t,"hw","met_hw_fine")
-draw(t,"hwphi","metphi_hw")
-draw(t,"hwphi","metphi_hw_fine")
+    #create and fill legend
+    leg = ROOT.TLegend(.20,.76, 0.85,.91)
+    leg.SetTextFont(42)
+    leg.SetHeader("")
+    leg.SetNColumns(2)
+    for n in nparts:
+        suf=""
+        if opts[hname]["rms"]:
+            suf = " (RMS {:.3f})".format(hists[n].GetRMS())
+        leg.AddEntry(hists[n], "{} input{}{}".format(n,"s"*(n>1),suf),"pel")
 
-# differences
-draw(t,"hw-ref","met_diff")
-draw(t,"hw/ref","met_rel")
-draw(t,"hwphi-refphi","metphi_diff")
-#2d
-draw(t,"hw-ref:ref"         ,"2d_met_diff")
-draw(t,"hw/ref:ref"         ,"2d_met_rel")
-draw(t,"hwphi-refphi:refphi","2d_metphi_diff")
-#profile
-draw(t,"hw-ref:ref"         ,"p_met_diff")
-draw(t,"hw/ref:ref"         ,"p_met_rel")
-draw(t,"hwphi-refphi:refphi","p_metphi_diff")
-
-
-
-
-f = ROOT.TFile("hists.root","recreate")
-for x in h: h[x].Write()
-f.Close()
+    #draw the legend
+    leg.SetFillStyle(0)
+    leg.SetFillColor(0)
+    leg.SetBorderSize(0)
+    leg.Draw()
+    
+    c.SaveAs("output/test_"+hname+".pdf")
+    del c
+        
