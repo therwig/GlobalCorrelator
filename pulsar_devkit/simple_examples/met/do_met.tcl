@@ -13,8 +13,8 @@ open_solution -reset "solution1"
 #	xcku5p-sfvb784-3-e
 #	xcku115-flvf1924-2-i
 #	xcvu9p-flga2104-2l-e
-set_part {xc7vx690tffg1927-2}
-create_clock -period 5 -name default
+set_part {xcvu9p-flga2104-2l-e}
+create_clock -period 4.16667 -name default
 
 # do stuff
 csim_design
