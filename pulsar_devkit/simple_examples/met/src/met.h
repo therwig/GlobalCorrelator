@@ -8,7 +8,7 @@
 
 // For testing
 #define NTEST 10000
-#define NPART 10
+#define NPART 100
 #define FLOATPI 3.141593
 #define DEBUG 0
 
@@ -16,11 +16,11 @@
 // Input / Output types
 //
 
-// pT is uint where 1=1GeV, up to 1024=2^10
+//  pT is uint where 1=1/4 GeV, up to 4096(/0.25=2^16)
 //   px, py need to be signed
 //   pT^2 needs double precision
 // TDR: 16 bits, 1/4 GeV. For us, 12 bits probably OK (1024 GeV) but would need to add overflow checks
-#define PT_SIZE 12
+#define PT_SIZE 16
 typedef ap_uint<PT_SIZE> pt_t;
 typedef ap_int<PT_SIZE+1> pxy_t;
 #define PT2_SIZE 2*PT_SIZE
@@ -184,7 +184,8 @@ template<class pt_T, class phi_T,class pxy_T>
 // This is not the most efficient way, I think, since numbers 513-1023 all map to 1 !
 //   TODO - come back to this
 //
-#define INV_TAB_SIZE (1<<(PT_SIZE))
+#define DROP_BITS 2
+#define INV_TAB_SIZE (1<<(PT_SIZE-DROP_BITS))
 // return the inverse of a 'pt_size' bits (1024) number
 template<class pt_T>
 void init_inv_table(pt_T table_out[INV_TAB_SIZE]) {
@@ -193,6 +194,7 @@ void init_inv_table(pt_T table_out[INV_TAB_SIZE]) {
     for (int i = 1; i < INV_TAB_SIZE; i++) {
         //#pragma HLS unroll factor=1
         table_out[i] = round((1<<PT_SIZE) / float(i));
+        //std::cout << table_out[i] << std::endl;
     }
     return;
 }
@@ -259,16 +261,13 @@ template<class pxy_T, class phi_T, class pt_T>
     pt_t b = y; //x<y ? y : x;
     if(a>b){ a = y; b = x; }
 
-    /* if(1){ */
-    /*     //a,b up to  */
-    /* } else { */
-        // get a/b <= 1
-        pt_t inv_b = inv_table[b];
-        pt_t a_over_b = a * inv_b; // x 2^(PT_BITS)
-        ap_uint<ATAN_SIZE> atan_index = a_over_b >> (PT_SIZE-ATAN_SIZE); // keep only most significant bits
-        phi = atan_table[atan_index];
-    /* } */
-    //return;
+    pt_t inv_b;
+    if(b>= (1<<(PT_SIZE-DROP_BITS))) inv_b = 1; // don't bother to store these in the LUT..
+    else inv_b = inv_table[b];
+
+    pt_t a_over_b = a * inv_b; // x 2^(PT_SIZE-DROP_BITS)
+    ap_uint<ATAN_SIZE> atan_index = a_over_b >> (PT_SIZE-ATAN_SIZE); // keep only most significant bits
+    phi = atan_table[atan_index];
 
     // rotate from (0,pi/4) to full quad1
     if(y>x) phi = (1<<(PHI_SIZE-2)) - phi; //phi = pi/2 - phi
