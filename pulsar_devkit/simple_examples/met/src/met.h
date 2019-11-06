@@ -16,9 +16,9 @@
 // Input / Output types
 //
 
-//  pT is uint where 1=1/4 GeV, up to 4096(/0.25=2^16)
-//   px, py need to be signed
-//   pT^2 needs double precision
+//  pT is uint where 1 bit = 1/4 GeV, up to 4096 (16 bits)
+//    px, py need to be signed
+//    pT^2 needs double precision as pT
 // TDR: 16 bits, 1/4 GeV. For us, 12 bits probably OK (1024 GeV) but would need to add overflow checks
 #define PT_SIZE 16
 typedef ap_uint<PT_SIZE> pt_t;
@@ -26,20 +26,20 @@ typedef ap_int<PT_SIZE+1> pxy_t;
 #define PT2_SIZE 2*PT_SIZE
 typedef ap_uint<PT2_SIZE> pt2_t;
 #define PT_DEC_BITS 2
+// bits used to represent the decimal: 2->1/2^2 GeV precision
 
-// phi size = 10bits in TDR. For ref, 2pi/(2^10)=0.0006
+// phi size = 10bits in TDR. For reference, 2pi/(2^10)=0.0006
 #define PHI_SIZE 10
 typedef ap_int<PHI_SIZE> phi_t;
 
-
+// top algs
 void met_ref(float in_pt[NPART], float in_phi[NPART], float& out_pt, float& out_phi);
 void met_hw(pt_t data_pt[NPART], phi_t data_phi[NPART], pt2_t& res_pt2, phi_t& res_phi);
 
 
-
-
 //
 // Lookup tables for pt projections to X, Y
+//   n.b. store only (0,pi/2) to reduce size
 //
 
 #define PROJ_TAB_SIZE (1<<(PHI_SIZE-2))
@@ -48,23 +48,13 @@ void met_hw(pt_t data_pt[NPART], phi_t data_phi[NPART], pt2_t& res_pt2, phi_t& r
 template<class pt_T>
 void init_projx_table(pt_T table_out[PROJ_TAB_SIZE]) {
     // Return table of cos(phi) where phi is in (0,pi/2)
-    // multiply result by 1=2^(PT-SIZE)
+    // multiply result by 2^(PT_SIZE) (equal to 1 in our units)
     for (int i = 0; i < PROJ_TAB_SIZE; i++) {
-        //guard overflow near costheta=1
+        //store result, guarding overflow near costheta=1
         pt2_t x = round((1<<PT_SIZE) * cos(float(i)/PROJ_TAB_SIZE * FLOATPI/2));
+        // (using extra precision here (pt2_t, not pt_t) to check the out of bounds condition)
         if(x >= (1<<PT_SIZE)) table_out[i] = (1<<PT_SIZE)-1;
         else table_out[i] = x;
-        //table_out[i] = std::round((1<<PT_SIZE) * cos(float(i)/PROJ_TAB_SIZE * FLOATPI/2));
-        
-        if(0){
-            std::cout << " ---> " << i << "  ";// << table_out[i] << std::endl;
-            std::cout << (1<<PT_SIZE) << "  ";
-            std::cout << (float(i)/PROJ_TAB_SIZE * FLOATPI/2) << "  ";
-            std::cout << cos(float(i)/PROJ_TAB_SIZE * FLOATPI/2) << "  ";
-            std::cout << (1<<PT_SIZE) * cos(float(i)/PROJ_TAB_SIZE * FLOATPI/2) << "  ";
-            std::cout << table_out[i] << "  ";
-            std::cout << std::endl;
-        }
     }
     return;
 }
@@ -96,43 +86,7 @@ template<class pt_T, class phi_T,class pxy_T>
         x = -x;
 
     return;
-
-    // test projection and flipping 
-    if(0){
-        std::cout << " ---> " << pt << "  ";// << table_out[i] << std::endl;
-        std::cout << phi << "  ";
-        std::cout << phiQ1 << "  ";
-        std::cout << cos_table[phiQ1] << "  ";
-        std::cout << pt * cos_table[phiQ1] << "  ";
-        std::cout << ((pt * cos_table[phiQ1])>>(PT_SIZE)) << "  ";
-        std::cout << float(cos_table[phiQ1])/pow(2,PT_SIZE) << "  ";
-        std::cout << "   -> " << x << "  ";// << table_out[i] << std::endl;
-        if( phi>=(1<<(PHI_SIZE-2))
-            || phi<-(1<<(PHI_SIZE-2)))
-            x = 0-x;
-        std::cout << x << "  ";
-    }
-
-    // test the phi quadrant assignment
-    if(0){
-        bool flip;
-        for(int i=0;i< (1<<PHI_SIZE); i++){
-            phi = i;
-            flip = false;
-            ap_uint<PHI_SIZE-2> phiQ1 = phi;
-            if(phi>=(1<<(PHI_SIZE-2))) phiQ1 = (1<<(PHI_SIZE-2)) -1 - phiQ1; // map 64-128 (0-63) to 63-0
-            if(phi<0 && phi>=-(1<<(PHI_SIZE-2))) phiQ1 = (1<<(PHI_SIZE-2)) -1 - phiQ1; // map -64-1 (0-63) to 63-0
-            if( phi>=(1<<(PHI_SIZE-2))
-                || phi<-(1<<(PHI_SIZE-2)))
-                flip = true;
-            std::cout << "-> " << phi << "  " << phiQ1 << "  " << flip << std::endl;
-        }
-    }
 }
-
-
-
-
 
 
 
@@ -140,8 +94,8 @@ template<class pt_T>
 void init_projy_table(pt_T table_out[PROJ_TAB_SIZE]) {
     // Return table of sin(phi) where phi is in (0,pi/2)
     // multiply result by 1=2^(PT-SIZE)
+    // see comments in the above ProjX function
     for (int i = 0; i < PROJ_TAB_SIZE; i++) {
-        // guard overflow
         pt2_t x = round((1<<PT_SIZE) * sin(float(i)/PROJ_TAB_SIZE * FLOATPI/2));
         if(x >= (1<<PT_SIZE)) table_out[i] = (1<<PT_SIZE)-1;
         else table_out[i] = x;
@@ -181,8 +135,9 @@ template<class pt_T, class phi_T,class pxy_T>
 
 
 //
-// This is not the most efficient way, I think, since numbers 513-1023 all map to 1 !
-//   TODO - come back to this
+// This may not the most efficient way, I think, since numbers 513-1023 all map to 1 !
+//   Currently we mitigate, by simply not storing inverses of large numbers, 
+//   but there may be a better way to do this (TODO - study this!)
 //
 #define DROP_BITS 2
 #define INV_TAB_SIZE (1<<(PT_SIZE-DROP_BITS))
@@ -192,9 +147,7 @@ void init_inv_table(pt_T table_out[INV_TAB_SIZE]) {
     // multiply result by 1=2^(PT-SIZE)
     table_out[0]=(1<<PT_SIZE)-1;
     for (int i = 1; i < INV_TAB_SIZE; i++) {
-        //#pragma HLS unroll factor=1
         table_out[i] = round((1<<PT_SIZE) / float(i));
-        //std::cout << table_out[i] << std::endl;
     }
     return;
 }
@@ -204,37 +157,25 @@ void init_inv_table(pt_T table_out[INV_TAB_SIZE]) {
 #define ATAN_SIZE (PHI_SIZE-3)
 #define ATAN_TAB_SIZE (1<<ATAN_SIZE)
 // Get arctan of a number in (0,1), represented as integers 0 to 2^(pt_size)=1024
-// for a 1-1 mapping, we can get away with an eight of the bits used for full phi
+// for a 1-1 mapping, we can get away with an eighth of the bits used for full phi
 template<class phi_T>
 void init_atan_table(phi_T table_out[ATAN_TAB_SIZE]) {
-    // multiply result by 1=2^(PT-SIZE)
+    // multiply result by 1=2^(PT-SIZE) 
     table_out[0]=int(0);
     for (int i = 1; i < ATAN_TAB_SIZE; i++) {
         table_out[i] = int(round(atan(float(i)/ATAN_TAB_SIZE) * (1<<(PHI_SIZE-3)) / (FLOATPI/4)));
-        //std::cout << atan(float(i)/ATAN_TAB_SIZE) * (1<<(PHI_SIZE-3)) / (FLOATPI/4) << std::endl;
-        if(0){
-            std::cout << " -> ";
-            std::cout << i << "  ";
-            std::cout << float(i)/ATAN_TAB_SIZE << "  ";
-            std::cout << atan(float(i)/ATAN_TAB_SIZE) << "  ";
-            std::cout << atan(float(i)/ATAN_TAB_SIZE) * (1<<(PHI_SIZE-3)) / (FLOATPI/4) << "  ";
-            std::cout << table_out[i] << "  ";
-            std::cout << std::endl;
-        }
     }
     return;
 }
 
 template<class pxy_T, class phi_T, class pt_T>
-    void PhiFromXY(pxy_T px, pxy_T py, phi_T &phi, pt_T &ratio){
+    void PhiFromXY(pxy_T px, pxy_T py, phi_T &phi){
 
     // Initialize the lookup tables
 #ifdef __HLS_SYN__
     bool initialized = false;
     pt_t inv_table[INV_TAB_SIZE];
     pt_t atan_table[ATAN_TAB_SIZE];
-    //#pragma HLS ARRAY_PARTITION variable=inv_table complete
-    //#pragma HLS RESOURCE variable=inv_table core=ROM_1P
 #else 
     static bool initialized = false;
     static pt_t inv_table[INV_TAB_SIZE];
@@ -248,9 +189,6 @@ template<class pxy_T, class phi_T, class pt_T>
 
     if(px==0 && py==0){ phi = 0; return; }
 
-    // TODO check if these cases are handled properly...
-    //if(px==0 && py >0){ phi = 0; return; }
-
     // get q1 coordinates
     pt_t x =  px; //px>=0 ? px : -px;
     pt_t y =  py; //py>=0 ? py : -py;
@@ -262,7 +200,9 @@ template<class pxy_T, class phi_T, class pt_T>
     if(a>b){ a = y; b = x; }
 
     pt_t inv_b;
-    if(b>= (1<<(PT_SIZE-DROP_BITS))) inv_b = 1; // don't bother to store these in the LUT..
+    if(b>= (1<<(PT_SIZE-DROP_BITS))) inv_b = 1; 
+    // don't bother to store these large numbers in the LUT...
+    // instead approximate their inverses as 1
     else inv_b = inv_table[b];
 
     pt_t a_over_b = a * inv_b; // x 2^(PT_SIZE-DROP_BITS)
@@ -276,34 +216,12 @@ template<class pxy_T, class phi_T, class pt_T>
     if( px > 0 && py < 0 ) phi = -phi;                       // Q4 phi = -phi
     if( px < 0 && py < 0 ) phi = -((1<<(PHI_SIZE-1)) - phi); // Q3 composition of both
 
-    // TODO - CHECK rotate phi back
-    // TODO - CHECK px==0, py==0 cases
-
-    ratio=a_over_b;
-
     return;
-
-    if(0){
-        std::cout << " ---> ";
-        std::cout << a << "  ";
-        std::cout << b << "  ";
-        std::cout << inv_b << "  ";
-        std::cout << a*inv_b << "  ";
-        std::cout << atan_index << "  ";
-        std::cout << phi << "  ";
-        std::cout << " ---> ";
-        std::cout << 1./float(b) << "  ";
-        std::cout << (1<<PT_SIZE)/float(b) << "  ";
-        std::cout << float(a)/float(b) << "  ";
-        std::cout << atan(float(a)/float(b)) << "  ";
-        std::cout << atan(float(a)/float(b))*(1<<(PHI_SIZE-3))/(FLOATPI/4) << "  ";
-        std::cout << std::endl;
-    }
 }
 
 
 
-// Some general comments...
+// General comments:
 // division = multiplication and bit shift
 // if a, b uint<16>, then a in (0,2^16-1) and 1==2^16
 // then 1/b=2^16/b and a/b=a*(2^16/b)
