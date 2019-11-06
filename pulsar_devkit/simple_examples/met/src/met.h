@@ -7,7 +7,7 @@
 #include "ap_fixed.h"
 
 // For testing
-#define NTEST 10000
+#define NTEST 1000
 #define NPART 100
 #define FLOATPI 3.141593
 #define DEBUG 0

@@ -77,7 +77,7 @@ int alg_test() {
         if(DEBUG) std::cout << "  HW : met(pt = " << out_pt_hw << ", phi = "<< out_phi_hw_rad << ")\n";
 
         //print compact (in nice units)
-        if(!DEBUG && NTEST<=100)
+        if(0 && !DEBUG && NTEST<=100)
             std::cout << "Event " << i
                       << " (REF vs HW) met " << out_pt << " vs " << out_pt_hw
                       << ", phi "<< out_phi << " vs "<< out_phi_hw_rad << "\n";
@@ -213,8 +213,8 @@ int main() {
     // sqrt_acos_test();
 
     // test the algorithm
-    //alg_test();
-    full_alg_test();
+    alg_test();
+    //full_alg_test();
     //return 1;
     return 0;
 }

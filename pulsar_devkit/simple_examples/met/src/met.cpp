@@ -10,9 +10,11 @@ HLS implementation of MET calculation from PF objects
 
 // pt, phi are integers
 void met_hw(pt_t data_pt[NPART], phi_t data_phi[NPART], pt2_t& res_pt2, phi_t& res_phi){
+    // #pragma HLS ARRAY_PARTITION variable=data_pt block factor=4
+    // #pragma HLS ARRAY_PARTITION variable=data_phi block factor=4
     #pragma HLS ARRAY_PARTITION variable=data_pt complete
     #pragma HLS ARRAY_PARTITION variable=data_phi complete
-    #pragma HLS pipeline ii=1
+    #pragma HLS pipeline ii=6
     
     if(DEBUG) std::cout << "  HW Begin" << std::endl;
 
