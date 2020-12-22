@@ -9,15 +9,15 @@ library Int;
 use Int.DataType;
 use Int.ArrayTypes;
 
-entity AccumulateInputs is
+entity AccumulateInputsBig is
 port(
   clk : in std_logic := '0';
   d : in Vector(0 to 64 - 1) := NullVector(64);
   q : out Vector(0 to 128 - 1) := NullVector(128)
 );
-end AccumulateInputs;
+end AccumulateInputsBig;
 
-architecture rtl of AccumulateInputs is
+architecture rtl of AccumulateInputsBig is
 
     -- Layer input arrays
     -- First index is group, second is within-group
