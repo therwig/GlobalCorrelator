@@ -24,14 +24,15 @@ ENTITY DataPipe IS
   PORT(
     clk      : IN STD_LOGIC := '0'; -- The algorithm clock
     DataIn   : IN Vector;
-    DataPipe : OUT VectorPipe
+    DataPipe : OUT VectorPipe5
   );
 END DataPipe;
 -- -------------------------------------------------------------------------
 
 -- -------------------------------------------------------------------------
 ARCHITECTURE rtl OF DataPipe IS
-    SIGNAL DataPipeInternal : VectorPipe( DataPipe'RANGE )( DataIn'RANGE ) := NullVectorPipe( DataPipe'LENGTH , DataIn'LENGTH );
+    --SIGNAL DataPipeInternal : VectorPipe( DataPipe'RANGE )( DataIn'RANGE ) := NullVectorPipe( DataPipe'LENGTH , DataIn'LENGTH );
+    SIGNAL DataPipeInternal : VectorPipe5 := ( others => ( others => ((others => '0'), false, false) ) );
 BEGIN
 
   DataPipeInternal( 0 ) <= DataIn; -- since the data is clocked out , no need to clock it in as well...

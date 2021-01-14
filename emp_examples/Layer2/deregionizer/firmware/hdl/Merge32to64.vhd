@@ -12,50 +12,50 @@ use Int.ArrayTypes;
 entity Merge32to64 is
 port(
     clk : in std_logic := '0';
-    a : in Vector(0 to 32 - 1) := NullVector(32);
-    b : in Vector(0 to 32 - 1) := NullVector(32);
-    q : out Vector(0 to 64 - 1) := NullVector(64)
+    a : in Vector_32 := NullVector_32;
+    b : in Vector_32 := NullVector_32;
+    q : out Vector_64 := NullVector_64
 );
 end Merge32to64;
 
 architecture rtl of Merge32to64 is
 
     constant RouterLatency : integer := 4; -- a guess for now
-    signal aPipe : VectorPipe(0 to RouterLatency - 1)(0 to 32 - 1) := NulLVectorPipe(RouterLatency, 32);
+    signal aPipe : VectorPipe_5_32 := NullVectorPipe_5_32;
 
     -- Layer input arrays
     -- First index is group, second is within-group
-    signal X0 : Matrix(0 to 3)(0 to 7) := NullMatrix(4,8);
-    signal X1 : Matrix(0 to 3)(0 to 7) := NullMatrix(4,8);
-    signal X2 : Matrix(0 to 3)(0 to 7) := NullMatrix(4,8);
+    signal X0 : Matrix_4_8 := NullMatrix_4_8;
+    signal X1 : Matrix_4_8 := NullMatrix_4_8;
+    signal X2 : Matrix_4_8 := NullMatrix_4_8;
 
     -- Layer output arrays
-    signal Y0 : Matrix(0 to 3)(0 to 7) := NullMatrix(4,8);
-    signal Y1 : Matrix(0 to 3)(0 to 7) := NullMatrix(4,8);
-    signal Y2 : Matrix(0 to 3)(0 to 7) := NullMatrix(4,8);
+    signal Y0 : Matrix_4_8 := NullMatrix_4_8;
+    signal Y1 : Matrix_4_8 := NullMatrix_4_8;
+    signal Y2 : Matrix_4_8 := NullMatrix_4_8;
 
     -- Global Address arrays
-    signal XA0 : Int.ArrayTypes.Matrix(0 to 3)(0 to 7) := Int.ArrayTypes.NullMatrix(4,8);
-    signal XA1 : Int.ArrayTypes.Matrix(0 to 3)(0 to 7) := Int.ArrayTypes.NullMatrix(4,8);
-    signal XA2 : Int.ArrayTypes.Matrix(0 to 3)(0 to 7) := Int.ArrayTypes.NullMatrix(4,8);
+    signal XA0 : Int.ArrayTypes.Matrix_4_8 := Int.ArrayTypes.NullMatrix_4_8;
+    signal XA1 : Int.ArrayTypes.Matrix_4_8 := Int.ArrayTypes.NullMatrix_4_8;
+    signal XA2 : Int.ArrayTypes.Matrix_4_8 := Int.ArrayTypes.NullMatrix_4_8;
 
-    signal YA0 : Int.ArrayTypes.Matrix(0 to 3)(0 to 7) := Int.ArrayTypes.NullMatrix(4,8);
-    signal YA1 : Int.ArrayTypes.Matrix(0 to 3)(0 to 7) := Int.ArrayTypes.NullMatrix(4,8);
-    signal YA2 : Int.ArrayTypes.Matrix(0 to 3)(0 to 7) := Int.ArrayTypes.NullMatrix(4,8);
+    signal YA0 : Int.ArrayTypes.Matrix_4_8 := Int.ArrayTypes.NullMatrix_4_8;
+    signal YA1 : Int.ArrayTypes.Matrix_4_8 := Int.ArrayTypes.NullMatrix_4_8;
+    signal YA2 : Int.ArrayTypes.Matrix_4_8 := Int.ArrayTypes.NullMatrix_4_8;
 
     -- Local Address arrays
-    signal XLA0 : Int.ArrayTypes.Matrix(0 to 3)(0 to 7) := Int.ArrayTypes.NullMatrix(4,8);
-    signal XLA1 : Int.ArrayTypes.Matrix(0 to 3)(0 to 7) := Int.ArrayTypes.NullMatrix(4,8);
-    signal XLA2 : Int.ArrayTypes.Matrix(0 to 3)(0 to 7) := Int.ArrayTypes.NullMatrix(4,8);
+    signal XLA0 : Int.ArrayTypes.Matrix_4_8 := Int.ArrayTypes.NullMatrix_4_8;
+    signal XLA1 : Int.ArrayTypes.Matrix_4_8 := Int.ArrayTypes.NullMatrix_4_8;
+    signal XLA2 : Int.ArrayTypes.Matrix_4_8 := Int.ArrayTypes.NullMatrix_4_8;
 
     -- Final route arrays
-    signal bFlat   : Vector(0 to 31) := NullVector(32);
-    signal bAFlat  : Int.ArrayTypes.Vector(0 to 31) := Int.ArrayTypes.NullVector(32);
-    signal bRouted : Vector(0 to 63) := NullVector(64);
-    signal Y       : Vector(0 to 63) := NullVector(64);
+    signal bFlat   : Vector_32 := NullVector_32;
+    signal bAFlat  : Int.ArrayTypes.Vector_32 := Int.ArrayTypes.NullVector_32;
+    signal bRouted : Vector_64 := NullVector_64;
+    signal Y       : Vector_64 := NullVector_64;
 
     -- Final route mapping
-    constant YMap : Int.ArrayTypes.Vector(0 to 31) := (
+    constant YMap : Int.ArrayTypes.Vector_32 := (
                                                      (0,true,true),
                                                      (5,true,true),
                                                      (2,true,true),
@@ -98,7 +98,7 @@ architecture rtl of Merge32to64 is
 begin
 
     aPipeEnt:
-    entity work.DataPipe
+    entity work.DataPipe_32 --CH TODO
     port map(clk, a, aPipe);
     
     NMProc:
@@ -165,7 +165,7 @@ begin
 
         -- First route layer
         Route0:
-        entity work.UniqueRouter
+        entity work.UniqueRouter_8
         port map(
             clk             => clk,
             DataIn          => X0(i),
@@ -177,7 +177,7 @@ begin
 
         -- Second route layer
         Route1:
-        entity work.UniqueRouter
+        entity work.UniqueRouter_8
         port map(
             clk             => clk,
             DataIn          => X1(i),

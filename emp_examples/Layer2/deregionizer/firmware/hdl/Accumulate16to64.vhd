@@ -16,8 +16,8 @@ generic(
 );
 port(
   clk : in std_logic := '0';
-  d : in Vector(0 to nIn - 1) := NullVector(nIn);
-  q : out Vector(0 to nOut - 1) := NullVector(nOut)
+  d : in Vector_16 := NullVector_16;
+  q : out Vector_64 := NullVector_64
 );
 end AccumulateInputs;
 
@@ -25,32 +25,32 @@ architecture rtl of AccumulateInputs is
 
     -- Layer input arrays
     -- First index is group, second is within-group
-    signal X0 : Matrix(0 to 3)(0 to 3) := NullMatrix(4,4);
-    signal X1 : Matrix(0 to 3)(0 to 3) := NullMatrix(4,4);
-    signal X2 : Matrix(0 to 3)(0 to 3) := NullMatrix(4,4);
+    signal X0 : Matrix_4_4 := NullMatrix_4_4;
+    signal X1 : Matrix_4_4 := NullMatrix_4_4;
+    signal X2 : Matrix_4_4 := NullMatrix_4_4;
 
     -- Layer output arrays
-    signal Y0 : Matrix(0 to 3)(0 to 3) := NullMatrix(4,4);
-    signal Y1 : Matrix(0 to 3)(0 to 3) := NullMatrix(4,4);
-    signal Y2 : Matrix(0 to 3)(0 to 3) := NullMatrix(4,4);
+    signal Y0 : Matrix_4_4 := NullMatrix_4_4;
+    signal Y1 : Matrix_4_4 := NullMatrix_4_4;
+    signal Y2 : Matrix_4_4 := NullMatrix_4_4;
 
     -- Global Address arrays
-    signal XA0 : Int.ArrayTypes.Matrix(0 to 3)(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
-    signal XA1 : Int.ArrayTypes.Matrix(0 to 3)(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
-    signal XA2 : Int.ArrayTypes.Matrix(0 to 3)(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
+    signal XA0 : Int.ArrayTypes.Matrix_4_4 := Int.ArrayTypes.NullMatrix_4_4;
+    signal XA1 : Int.ArrayTypes.Matrix_4_4 := Int.ArrayTypes.NullMatrix_4_4;
+    signal XA2 : Int.ArrayTypes.Matrix_4_4 := Int.ArrayTypes.NullMatrix_4_4;
 
-    signal YA0 : Int.ArrayTypes.Matrix(0 to 3)(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
-    signal YA1 : Int.ArrayTypes.Matrix(0 to 3)(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
-    signal YA2 : Int.ArrayTypes.Matrix(0 to 3)(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
+    signal YA0 : Int.ArrayTypes.Matrix_4_4 := Int.ArrayTypes.NullMatrix_4_4;
+    signal YA1 : Int.ArrayTypes.Matrix_4_4 := Int.ArrayTypes.NullMatrix_4_4;
+    signal YA2 : Int.ArrayTypes.Matrix_4_4 := Int.ArrayTypes.NullMatrix_4_4;
 
     -- Local Address arrays
-    signal XLA0 : Int.ArrayTypes.Matrix(0 to 3)(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
-    signal XLA1 : Int.ArrayTypes.Matrix(0 to 3)(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
-    signal XLA2 : Int.ArrayTypes.Matrix(0 to 3)(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
+    signal XLA0 : Int.ArrayTypes.Matrix_4_4 := Int.ArrayTypes.NullMatrix_4_4;
+    signal XLA1 : Int.ArrayTypes.Matrix_4_4 := Int.ArrayTypes.NullMatrix_4_4;
+    signal XLA2 : Int.ArrayTypes.Matrix_4_4 := Int.ArrayTypes.NullMatrix_4_4;
 
     -- Final route arrays
-    signal Y16 : Vector(0 to 15) := NulLVector(16);
-    signal Y64 : Vector(0 to 63) := NullVector(64);
+    signal Y16 : Vector_16 := NullVector_16;
+    signal Y64 : Vector_64 := NullVector_64;
 
     -- N is the current base address to route to
     -- M is the max
@@ -129,7 +129,7 @@ begin
 
         -- First route layer
         Route0:
-        entity work.UniqueRouter
+        entity work.UniqueRouter_4
         port map(
             clk             => clk,
             DataIn          => X0(i),
@@ -141,7 +141,7 @@ begin
 
         -- Second route layer
         Route1:
-        entity work.UniqueRouter
+        entity work.UniqueRouter_4
         port map(
             clk             => clk,
             DataIn          => X1(i),

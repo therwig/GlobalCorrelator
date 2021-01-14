@@ -12,8 +12,8 @@ use Int.ArrayTypes;
 entity AccumulateInputsBig is
 port(
   clk : in std_logic := '0';
-  d : in Vector(0 to 64 - 1) := NullVector(64);
-  q : out Vector(0 to 128 - 1) := NullVector(128)
+  d : in Vector_64 := NullVector_64;
+  q : out Vector_128 := NullVector_128
 );
 end AccumulateInputsBig;
 
@@ -21,38 +21,38 @@ architecture rtl of AccumulateInputsBig is
 
     -- Layer input arrays
     -- First index is group, second is within-group
-    signal X0 : Matrix(0 to 7)(0 to 7) := NullMatrix(8,8);
-    signal X1 : Matrix(0 to 7)(0 to 7) := NullMatrix(8,8);
-    signal X2 : Matrix(0 to 7)(0 to 7) := NullMatrix(8,8);
+    signal X0 : Matrix_8_8 := NullMatrix_8_8;
+    signal X1 : Matrix_8_8 := NullMatrix_8_8;
+    signal X2 : Matrix_8_8 := NullMatrix_8_8;
 
     -- Layer output arrays
-    signal Y0 : Matrix(0 to 7)(0 to 7) := NullMatrix(8,8);
-    signal Y1 : Matrix(0 to 7)(0 to 7) := NullMatrix(8,8);
-    signal Y2 : Matrix(0 to 7)(0 to 7) := NullMatrix(8,8);
+    signal Y0 : Matrix_8_8 := NullMatrix_8_8;
+    signal Y1 : Matrix_8_8 := NullMatrix_8_8;
+    signal Y2 : Matrix_8_8 := NullMatrix_8_8;
 
     -- Global Address arrays
-    signal XA0 : Int.ArrayTypes.Matrix(0 to 7)(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
-    signal XA1 : Int.ArrayTypes.Matrix(0 to 7)(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
-    signal XA2 : Int.ArrayTypes.Matrix(0 to 7)(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
+    signal XA0 : Int.ArrayTypes.Matrix_8_8 := Int.ArrayTypes.NullMatrix_8_8;
+    signal XA1 : Int.ArrayTypes.Matrix_8_8 := Int.ArrayTypes.NullMatrix_8_8;
+    signal XA2 : Int.ArrayTypes.Matrix_8_8 := Int.ArrayTypes.NullMatrix_8_8;
 
-    signal YA0 : Int.ArrayTypes.Matrix(0 to 7)(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
-    signal YA1 : Int.ArrayTypes.Matrix(0 to 7)(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
-    signal YA2 : Int.ArrayTypes.Matrix(0 to 7)(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
+    signal YA0 : Int.ArrayTypes.Matrix_8_8 := Int.ArrayTypes.NullMatrix_8_8;
+    signal YA1 : Int.ArrayTypes.Matrix_8_8 := Int.ArrayTypes.NullMatrix_8_8;
+    signal YA2 : Int.ArrayTypes.Matrix_8_8 := Int.ArrayTypes.NullMatrix_8_8;
 
     -- Local Address arrays
-    signal XLA0 : Int.ArrayTypes.Matrix(0 to 7)(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
-    signal XLA1 : Int.ArrayTypes.Matrix(0 to 7)(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
-    signal XLA2 : Int.ArrayTypes.Matrix(0 to 7)(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
+    signal XLA0 : Int.ArrayTypes.Matrix_8_8 := Int.ArrayTypes.NullMatrix_8_8;
+    signal XLA1 : Int.ArrayTypes.Matrix_8_8 := Int.ArrayTypes.NullMatrix_8_8;
+    signal XLA2 : Int.ArrayTypes.Matrix_8_8 := Int.ArrayTypes.NullMatrix_8_8;
 
     -- Final route arrays
-    signal Y64: Vector(0 to 63) := NulLVector(64);
-    signal Y128 : Vector(0 to 127) := NullVector(128);
+    signal Y64: Vector_64 := NullVector_64;
+    signal Y128 : Vector_128 := NullVector_128;
 
     -- N is the current base address to route to
     -- M is the max
     -- Use a vector with duplicated logic for each element to ease signal fanout
-    signal N : Int.ArrayTypes.Vector(0 to 7) := Int.ArrayTypes.NullVector(8);
-    signal M : Int.ArrayTypes.Vector(0 to 7) := Int.ArrayTypes.NullVector(8);
+    signal N : Int.ArrayTypes.Vector_8 := Int.ArrayTypes.NullVector_8;
+    signal M : Int.ArrayTypes.Vector_8 := Int.ArrayTypes.NullVector_8;
     --signal N : integer range 0 to 127 := 0;
     --signal M : integer range 0 to 127 := 0;
     
@@ -133,7 +133,7 @@ begin
 
         -- First route layer
         Route0:
-        entity work.UniqueRouter
+        entity work.UniqueRouter_8
         port map(
             clk             => clk,
             DataIn          => X0(i),
@@ -145,7 +145,7 @@ begin
 
         -- Second route layer
         Route1:
-        entity work.UniqueRouter
+        entity work.UniqueRouter_8
         port map(
             clk             => clk,
             DataIn          => X1(i),

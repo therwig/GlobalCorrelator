@@ -2,9 +2,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-library Utilities;
-use Utilities.Utilities.all;
-use Utilities.Debugging.all;
+--library Utilities;
+--use Utilities.Utilities.all;
+--use Utilities.Debugging.all;
 
 use work.DataType.all;
 use work.ArrayTypes.all;
@@ -58,8 +58,10 @@ end generate;
 
 GN : if d'length > 2 generate
   -- Lengths are rounded up to nearest even
-  signal dInt : Vector(0 to intLen - 1) := NullVector(intLen);
-  signal qInt : Vector(0 to qLen - 1) := NullVector(qLen);
+  --signal dInt : Vector(0 to intLen - 1) := NullVector(intLen);
+  --signal qInt : Vector(0 to qLen - 1) := NullVector(qLen);
+  signal dInt : Vector(0 to intLen - 1) := ( others => cNull );
+  signal qInt : Vector(0 to qLen - 1) := ( others => cNull );
   begin
     dInt(0 to d'length - 1) <= d;
 
