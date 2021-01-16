@@ -11,8 +11,8 @@ use Int.ArrayTypes;
 entity MergeArrays is
 port(
     clk : in std_logic := '0';
-    D : in Matrix(0 to 6 - 1)(0 to 16 - 1) := NullMatrix(6, 16);
-    Q : out Vector(0 to 64 - 1) := NullVector(64)
+    D : in Matrix(0 to 5)(0 to 15) := NullMatrix(6, 16);
+    Q : out Vector(0 to 63) := NullVector(64)
 );
 end MergeArrays;
 
