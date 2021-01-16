@@ -42,7 +42,7 @@ end emp_payload;
 architecture rtl of emp_payload is
 	
     --signal dVIO  : IO.ArrayTypes.Vector(0 to 6 * 16 - 1) := IO.ArrayTypes.NullVector(6 * 16);
-    signal dIO   : IO.ArrayTypes.Matrix(0 to 5)(0 to 15)      := IO.ArrayTypes.NullMatrix(6, 16);
+    signal dIO   : IO.ArrayTypes.Matrix16(0 to 5)      := IO.ArrayTypes.NullMatrix(6, 16);
     signal qIO   : IO.ArrayTypes.Vector(0 to 127)             := IO.ArrayTypes.NullVector(128);
     signal qIOP  : IO.ArrayTypes.VectorPipe(0 to 4)(0 to 127) := IO.ArrayTypes.NullVectorPipe(5, 128);
     signal qMax  : IO.ArrayTypes.Vector(0 to 0)               := IO.ArrayTypes.NullVector(1);

@@ -9,7 +9,8 @@ export PRJ_VERSION = 0x51091000
 export PROJECT = top
 
 #Define target part
-export PRJ_PART = xcvu9p-flgc2104-2L-e
+export PRJ_PART = xcvu9p-flgc2104-1-e
+#export PRJ_PART = xcvu9p-flgc2104-2L-e
 
 export PARALLEL_SYNTH = 24
 

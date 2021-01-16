@@ -11,7 +11,7 @@ use Int.ArrayTypes;
 entity MergeArrays is
 port(
     clk : in std_logic := '0';
-    D : in Matrix(0 to 5)(0 to 15) := NullMatrix(6, 16);
+    D : in Matrix16(0 to 5) := NullMatrix(6, 16);
     Q : out Vector(0 to 63) := NullVector(64)
 );
 end MergeArrays;
@@ -20,11 +20,11 @@ architecture behavioral of MergeArrays is
     constant latency_l1 : integer := 5; -- The latency of the 2nd merge layer for pipelining
 
     -- Output of first merge layer
-    signal d0 : Matrix(0 to 2)(0 to 31) := NullMatrix(3,32);
+    signal d0 : Matrix32(0 to 2) := NullMatrix(3,32);
     -- Output of second merge layer
     signal d0_pipe : VectorPipe(0 to latency_l1 - 1)(0 to 31) := NullVectorPipe(latency_l1, 32);
-    signal d1 : Matrix(0 to 1)(0 to 63) := NullMatrix(2,64);
-    signal d2 : Matrix(0 to 1)(0 to 63) := NullMatrix(2,64);
+    signal d1 : Matrix4(0 to 1) := NullMatrix(2,64);
+    signal d2 : Matrix4(0 to 1) := NullMatrix(2,64);
 
 begin
 

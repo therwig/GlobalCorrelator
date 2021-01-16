@@ -16,7 +16,7 @@ entity link_map is
 	port(
 		clk: in std_logic; -- ipbus signals
 		d: in ldata(4 * N_REGION - 1 downto 0); -- data in
-        q: out IO.ArrayTypes.Matrix(0 to 5)(0 to 15) := IO.ArrayTypes.NullMatrix(6, 16)
+        q: out IO.ArrayTypes.Matrix16(0 to 5) := IO.ArrayTypes.NullMatrix(6, 16)
 	);
 end link_map;
 
@@ -24,7 +24,7 @@ architecture rtl of link_map is
 	
     signal dVIO : IO.ArrayTypes.Vector(0 to 4 * N_REGION - 1) := IO.ArrayTypes.NullVector(4 * N_REGION);
     signal dPIO : IO.ArrayTypes.VectorPipe(0 to 4)(0 to 4 * N_REGION - 1) := IO.ArrayTypes.NullVectorPipe(5, 4 * N_REGION);
-    signal qInt : IO.ArrayTypes.Matrix(0 to 5)(0 to 15) := IO.ArrayTypes.NullMatrix(6, 16);
+    signal qInt : IO.ArrayTypes.Matrix16(0 to 5) := IO.ArrayTypes.NullMatrix(6, 16);
 
 begin
 

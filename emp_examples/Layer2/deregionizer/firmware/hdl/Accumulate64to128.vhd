@@ -21,28 +21,28 @@ architecture rtl of AccumulateInputs is
 
     -- Layer input arrays
     -- First index is group, second is within-group
-    signal X0 : Matrix(0 to 7)(0 to 7) := NullMatrix(8,8);
-    signal X1 : Matrix(0 to 7)(0 to 7) := NullMatrix(8,8);
-    signal X2 : Matrix(0 to 7)(0 to 7) := NullMatrix(8,8);
+    signal X0 : Matrix8(0 to 7) := NullMatrix(8,8);
+    signal X1 : Matrix8(0 to 7) := NullMatrix(8,8);
+    signal X2 : Matrix8(0 to 7) := NullMatrix(8,8);
 
     -- Layer output arrays
-    signal Y0 : Matrix(0 to 7)(0 to 7) := NullMatrix(8,8);
-    signal Y1 : Matrix(0 to 7)(0 to 7) := NullMatrix(8,8);
-    signal Y2 : Matrix(0 to 7)(0 to 7) := NullMatrix(8,8);
+    signal Y0 : Matrix8(0 to 7) := NullMatrix(8,8);
+    signal Y1 : Matrix8(0 to 7) := NullMatrix(8,8);
+    signal Y2 : Matrix8(0 to 7) := NullMatrix(8,8);
 
     -- Global Address arrays
-    signal XA0 : Int.ArrayTypes.Matrix(0 to 7)(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
-    signal XA1 : Int.ArrayTypes.Matrix(0 to 7)(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
-    signal XA2 : Int.ArrayTypes.Matrix(0 to 7)(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
+    signal XA0 : Int.ArrayTypes.Matrix8(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
+    signal XA1 : Int.ArrayTypes.Matrix8(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
+    signal XA2 : Int.ArrayTypes.Matrix8(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
 
-    signal YA0 : Int.ArrayTypes.Matrix(0 to 7)(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
-    signal YA1 : Int.ArrayTypes.Matrix(0 to 7)(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
-    signal YA2 : Int.ArrayTypes.Matrix(0 to 7)(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
+    signal YA0 : Int.ArrayTypes.Matrix8(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
+    signal YA1 : Int.ArrayTypes.Matrix8(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
+    signal YA2 : Int.ArrayTypes.Matrix8(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
 
     -- Local Address arrays
-    signal XLA0 : Int.ArrayTypes.Matrix(0 to 7)(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
-    signal XLA1 : Int.ArrayTypes.Matrix(0 to 7)(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
-    signal XLA2 : Int.ArrayTypes.Matrix(0 to 7)(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
+    signal XLA0 : Int.ArrayTypes.Matrix8(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
+    signal XLA1 : Int.ArrayTypes.Matrix8(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
+    signal XLA2 : Int.ArrayTypes.Matrix8(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
 
     -- Final route arrays
     signal Y64: Vector(0 to 63) := NulLVector(64);

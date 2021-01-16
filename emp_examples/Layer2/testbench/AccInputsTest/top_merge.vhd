@@ -9,7 +9,7 @@ use Simple.ArrayTypes.all;
 entity top is
 port(
   clk : in std_logic := '0';
-  d : in Matrix(0 to 5)(0 to 15) := NullMatrix(6, 16);
+  d : in Matrix16(0 to 5) := NullMatrix(6, 16);
   q : out Vector(0 to 127) := NullVector(128)
 );
 end top;

@@ -11,7 +11,7 @@ use Int.ArrayTypes;
 entity MergeAccumulateInputRegions is
 port(
     clk : in std_logic := '0';
-    RegionStreams : in Matrix(0 to 5)(0 to 15) := NullMatrix(6, 16);
+    RegionStreams : in Matrix16(0 to 5) := NullMatrix(6, 16);
     EventParticles : out Vector(0 to 127) := NullVector(128)
 );
 end MergeAccumulateInputRegions;

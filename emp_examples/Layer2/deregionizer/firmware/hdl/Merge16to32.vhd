@@ -25,28 +25,28 @@ architecture rtl of Merge16to32 is
 
     -- Layer input arrays
     -- First index is group, second is within-group
-    signal X0 : Matrix(0 to 3)(0 to 3) := NullMatrix(4,4);
-    signal X1 : Matrix(0 to 3)(0 to 3) := NullMatrix(4,4);
-    signal X2 : Matrix(0 to 3)(0 to 3) := NullMatrix(4,4);
+    signal X0 : Matrix4(0 to 3) := NullMatrix(4,4);
+    signal X1 : Matrix4(0 to 3) := NullMatrix(4,4);
+    signal X2 : Matrix4(0 to 3) := NullMatrix(4,4);
 
     -- Layer output arrays
-    signal Y0 : Matrix(0 to 3)(0 to 3) := NullMatrix(4,4);
-    signal Y1 : Matrix(0 to 3)(0 to 3) := NullMatrix(4,4);
-    signal Y2 : Matrix(0 to 3)(0 to 3) := NullMatrix(4,4);
+    signal Y0 : Matrix4(0 to 3) := NullMatrix(4,4);
+    signal Y1 : Matrix4(0 to 3) := NullMatrix(4,4);
+    signal Y2 : Matrix4(0 to 3) := NullMatrix(4,4);
 
     -- Global Address arrays
-    signal XA0 : Int.ArrayTypes.Matrix(0 to 3)(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
-    signal XA1 : Int.ArrayTypes.Matrix(0 to 3)(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
-    signal XA2 : Int.ArrayTypes.Matrix(0 to 3)(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
+    signal XA0 : Int.ArrayTypes.Matrix4(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
+    signal XA1 : Int.ArrayTypes.Matrix4(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
+    signal XA2 : Int.ArrayTypes.Matrix4(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
 
-    signal YA0 : Int.ArrayTypes.Matrix(0 to 3)(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
-    signal YA1 : Int.ArrayTypes.Matrix(0 to 3)(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
-    signal YA2 : Int.ArrayTypes.Matrix(0 to 3)(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
+    signal YA0 : Int.ArrayTypes.Matrix4(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
+    signal YA1 : Int.ArrayTypes.Matrix4(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
+    signal YA2 : Int.ArrayTypes.Matrix4(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
 
     -- Local Address arrays
-    signal XLA0 : Int.ArrayTypes.Matrix(0 to 3)(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
-    signal XLA1 : Int.ArrayTypes.Matrix(0 to 3)(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
-    signal XLA2 : Int.ArrayTypes.Matrix(0 to 3)(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
+    signal XLA0 : Int.ArrayTypes.Matrix4(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
+    signal XLA1 : Int.ArrayTypes.Matrix4(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
+    signal XLA2 : Int.ArrayTypes.Matrix4(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
 
     -- Final route arrays
     signal bRouted  : Vector(0 to 31) := NullVector(32);
