@@ -21,7 +21,7 @@ end Merge32to64;
 architecture rtl of Merge32to64 is
 
     constant RouterLatency : integer := 4; -- a guess for now
-    signal aPipe : VectorPipe(0 to RouterLatency - 1)(0 to 32 - 1) := NulLVectorPipe(RouterLatency, 32);
+    signal aPipe : VectorPipe(0 to RouterLatency - 1)(0 to 31) := NulLVectorPipe(RouterLatency, 32);
 
     -- Layer input arrays
     -- First index is group, second is within-group
