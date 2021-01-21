@@ -45,7 +45,7 @@ architecture rtl of BigAccumulateInputs is
     signal XLA2 : Int.ArrayTypes.Matrix(0 to 7)(0 to 7) := Int.ArrayTypes.NullMatrix(8,8);
 
     -- Final route arrays
-    signal Y64: Vector(0 to 63) := NulLVector(64);
+    signal Y64: Vector(0 to 63) := NullVector(64);
     signal Y128 : Vector(0 to 127) := NullVector(128);
 
     -- N is the current base address to route to

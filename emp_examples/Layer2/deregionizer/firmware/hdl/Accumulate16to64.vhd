@@ -49,7 +49,7 @@ architecture rtl of AccumulateInputs is
     signal XLA2 : Int.ArrayTypes.Matrix(0 to 3)(0 to 3) := Int.ArrayTypes.NullMatrix(4,4);
 
     -- Final route arrays
-    signal Y16 : Vector(0 to 15) := NulLVector(16);
+    signal Y16 : Vector(0 to 15) := NullVector(16);
     signal Y64 : Vector(0 to 63) := NullVector(64);
 
     -- N is the current base address to route to
