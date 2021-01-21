@@ -47,7 +47,7 @@ begin
         q => d1(0)
     );
 
-    PipeLayer2: entity work.DataPipe
+    PipeLayer2: entity work.DataPipe32
     port map(clk, d0(2), d0_pipe);
 
     MergeLayer3: entity work.Merge32and64to64

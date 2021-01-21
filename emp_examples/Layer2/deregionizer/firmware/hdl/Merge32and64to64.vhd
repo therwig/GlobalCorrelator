@@ -99,7 +99,7 @@ architecture rtl of Merge32and64to64 is
 begin
 
     aPipeEnt:
-    entity work.DataPipe
+    entity work.DataPipe64
     port map(clk, a, aPipe);
     aPiped <= aPipe(routerLatency-1);
     

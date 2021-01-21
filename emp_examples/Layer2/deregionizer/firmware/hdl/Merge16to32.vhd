@@ -61,7 +61,7 @@ architecture rtl of Merge16to32 is
 begin
 
     aPipeEnt:
-    entity work.DataPipe
+    entity work.DataPipe16
     port map(clk, a, aPipe);
     
     NMProc:

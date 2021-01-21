@@ -30,7 +30,7 @@ begin
     Merge : entity work.MergeArrays
     port map(clk, RegionStreams, RegionsMerged);
 
-    Pipe : entity work.DataPipe
+    Pipe : entity work.DataPipe64
     port map(clk, RegionsMerged, RegionsMergedPiped);
 
     Accumulate : entity work.BigAccumulateInputs

@@ -98,7 +98,7 @@ architecture rtl of Merge32to64 is
 begin
 
     aPipeEnt:
-    entity work.DataPipe
+    entity work.DataPipe32
     port map(clk, a, aPipe);
     
     NMProc:
