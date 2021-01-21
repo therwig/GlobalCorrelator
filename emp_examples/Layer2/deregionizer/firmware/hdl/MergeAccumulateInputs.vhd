@@ -33,7 +33,7 @@ begin
     Pipe : entity work.DataPipe
     port map(clk, RegionsMerged, RegionsMergedPiped);
 
-    Accumulate : entity work.AccumulateInputs
+    Accumulate : entity work.BigAccumulateInputs
     port map(clk, RegionsMergedPiped(4), EventParticles);
 
 end rtl;
