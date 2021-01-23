@@ -12,9 +12,9 @@ use Int.ArrayTypes;
 entity Merge32to64 is
 port(
     clk : in std_logic := '0';
-    a : in Vector(0 to 32 - 1) := NullVector(32);
-    b : in Vector(0 to 32 - 1) := NullVector(32);
-    q : out Vector(0 to 64 - 1) := NullVector(64)
+    a : in Vector(0 to 31) := NullVector(32);
+    b : in Vector(0 to 31) := NullVector(32);
+    q : out Vector(0 to 63) := NullVector(64)
 );
 end Merge32to64;
 

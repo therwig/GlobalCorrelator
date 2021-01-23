@@ -16,8 +16,10 @@ generic(
 );
 port(
   clk : in std_logic := '0';
-  d : in Vector(0 to nIn - 1) := NullVector(nIn);
-  q : out Vector(0 to nOut - 1) := NullVector(nOut)
+  d : in Vector(0 to 15) := NullVector(nIn);
+  q : out Vector(0 to 63) := NullVector(nOut)
+  --d : in Vector(0 to nIn - 1) := NullVector(nIn);
+  --q : out Vector(0 to nOut - 1) := NullVector(nOut)
 );
 end AccumulateInputs;
 
