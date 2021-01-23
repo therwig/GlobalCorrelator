@@ -165,7 +165,7 @@ begin
 
         -- First route layer
         Route0:
-        entity work.UniqueRouter
+        entity work.UniqueRouter8
         port map(
             clk             => clk,
             DataIn          => X0(i),
@@ -177,7 +177,7 @@ begin
 
         -- Second route layer
         Route1:
-        entity work.UniqueRouter
+        entity work.UniqueRouter8
         port map(
             clk             => clk,
             DataIn          => X1(i),
