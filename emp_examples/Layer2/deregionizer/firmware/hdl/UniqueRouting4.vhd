@@ -10,7 +10,7 @@ library Int;
 use Int.DataType;
 use Int.ArrayTypes;
 
-entity UniqueRouter is
+entity UniqueRouter4 is
 port(
     clk             : in std_logic := '0';
     DataIn          : in Vector4;
@@ -19,7 +19,7 @@ port(
     DataOut         : out Vector4;
     DataOutGlobAddr : out Int.ArrayTypes.Vector4
 );
-end UniqueRouter;
+end UniqueRouter4;
 
 -------------------------------------------------
 -- Route the incoming data
@@ -27,7 +27,7 @@ end UniqueRouter;
 -- sent to a uniqe output
 -------------------------------------------------
 
-architecture rtl of UniqueRouter is
+architecture rtl of UniqueRouter4 is
 begin
 
     Gen:
