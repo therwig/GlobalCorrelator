@@ -70,9 +70,9 @@ begin
         end process;
     end generate;
 
-    Debug : entity work.Debug
-    generic map("Regionizer-EventParticles", "./")
-    port map(clk, EventParticles);
+    --Debug : entity work.Debug
+    --generic map("Regionizer-EventParticles", "./")
+    --port map(clk, EventParticles);
 
 end rtl;
 
