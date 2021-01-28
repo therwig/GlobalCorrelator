@@ -73,7 +73,6 @@ begin
     Debug : entity work.Debug
     generic map("Regionizer-EventParticles", "./")
     port map(clk, EventParticles);
->>>>>>> layer2-dev-ruckus
 
 end rtl;
 
