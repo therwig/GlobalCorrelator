@@ -39,7 +39,7 @@ begin
     Accumulate : entity work.BigAccumulateInputs
     port map(clk, RegionsMergedPiped(4), EventParticlesInt);
 
-    QPipe : entity work.DataPipe
+    QPipe : entity work.DataPipe128
     port map(clk, EventParticlesInt, EventParticlesPipe);
 
     --EventParticles <= EventParticlesPipe(3);
