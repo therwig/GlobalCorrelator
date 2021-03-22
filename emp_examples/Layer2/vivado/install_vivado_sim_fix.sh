@@ -144,6 +144,12 @@ echo
 echo "The following files will be modified for the VectorPipe32 vhd 2008 sim fix:"
 grep -ril "VectorPipe\(.*\)\(0.*31\)" $DEST
 grep -ril "VectorPipe\(.*\)\(0.*31\)" $DEST | xargs sed -ri "s|VectorPipe\(([^)]+)\)\(0.*31\)|VectorPipe32\(\1\)|gI"
+# ------------------------- VectorPipe36 -------------------------------- #
+#search for VectorPipe36 with white space before and open parenthesis after
+echo
+echo "The following files will be modified for the VectorPipe36 vhd 2008 sim fix:"
+grep -ril "VectorPipe\(.*\)\(0.*35\)" $DEST
+grep -ril "VectorPipe\(.*\)\(0.*35\)" $DEST | xargs sed -ri "s|VectorPipe\(([^)]+)\)\(0.*35\)|VectorPipe36\(\1\)|gI"
 
 # ------------------------- VectorPipe16 -------------------------------- #
 #search for VectorPipe16 with white space before and open parenthesis after
@@ -188,6 +194,12 @@ echo
 echo "The following files will be modified for the Vector64 vhd 2008 sim fix:"
 grep -ril "Vector(0.*63)" $DEST
 grep -ril "Vector(0.*63)" $DEST | xargs sed -ri "s|Vector\(0.*63\)|Vector64|gI"
+# ------------------------- Vector36 -------------------------------- #
+#search for Vector36 with white space before and open parenthesis after
+echo
+echo "The following files will be modified for the Vector36 vhd 2008 sim fix:"
+grep -ril "Vector(0.*35)" $DEST
+grep -ril "Vector(0.*35)" $DEST | xargs sed -ri "s|Vector\(0.*35\)|Vector36|gI"
 # ------------------------- Vector32 -------------------------------- #
 #search for Vector32 with white space before and open parenthesis after
 echo
